@@ -1,0 +1,26 @@
+{
+  "name": "Hevi Explorer",
+  "short_name": "Hevi Explorer",
+  "description": "Local-first file manager, media server and AeroGrab gesture file transfer — by Technical White Hat.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#050912",
+  "theme_color": "#0a1620",
+  "icons": [
+    {
+      "src": "/brand.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"]
+}

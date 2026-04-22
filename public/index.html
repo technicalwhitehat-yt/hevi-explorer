@@ -1,0 +1,2866 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    />
+    <title>Hevi Explorer — Private Media Vault</title>
+    <link rel="stylesheet" href="/style.css?v=19" />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Hevi" />
+    <link rel="apple-touch-icon" href="/brand.svg" />
+    <link
+      rel="icon"
+      href="/brand.svg"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <!-- Force-portrait overlay (browser context — manifest only locks PWA) -->
+    <div class="rotate-portrait-overlay" aria-hidden="true">
+      <div class="rp-icon">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="6" y="3" width="12" height="18" rx="2.5"/>
+          <line x1="9" y1="18" x2="15" y2="18"/>
+        </svg>
+      </div>
+      <div class="rp-title">Please rotate to portrait</div>
+      <div class="rp-sub">Hevi Explorer is designed for portrait orientation. Turn your device upright to continue.</div>
+    </div>
+
+    <!-- ── LOCK SCREEN ── -->
+    <div class="lock-screen hidden" id="lockScreen">
+      <div class="lock-card">
+        <div class="lock-icon brand-orb">
+          <img src="/brand.svg" alt="" />
+        </div>
+        <div class="lock-title">Hevi Explorer</div>
+        <div class="lock-subtitle">Your private media vault</div>
+        <div class="lock-input-wrap">
+          <input type="password" id="lockInput" class="lock-input" placeholder="Password" autocomplete="current-password" />
+        </div>
+        <div class="lock-error hidden" id="lockError">Incorrect password</div>
+        <button class="lock-btn" id="lockUnlockBtn">Unlock</button>
+      </div>
+    </div>
+
+    <!-- ── TOP BAR ── -->
+    <header class="topbar">
+      <button class="icon-btn" id="menuBtn" title="Menu">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
+      </button>
+      <div class="topbar-center">
+        <div class="brand-lockup brand-lockup-top">
+          <img class="brand-mark" src="/brand.svg" alt="" />
+          <h1 class="topbar-title" id="topbarTitle">Hevi Explorer</h1>
+        </div>
+        <span class="topbar-subtitle" id="topbarSubtitle">Private Media Vault</span>
+      </div>
+      <button class="icon-btn hidden" id="viewMenuBtn" title="View options">
+        <svg viewBox="0 0 24 24"><path d="M3 5h18M3 12h12M3 19h7" stroke-linecap="round"/></svg>
+      </button>
+      <div class="ag-green-dot hidden" id="aeroGreenDot" title="AeroGrab active"></div>
+      <button class="icon-btn" id="searchToggleBtn" title="Search">
+        <svg viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.35-4.35" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- ── VIEW MENU DROPDOWN ── -->
+    <div class="view-menu hidden" id="viewMenu">
+      <div class="vm-section-label">View</div>
+      <div class="vm-dir-row">
+        <button class="vm-dir-btn" id="vmGrid">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+          Grid
+        </button>
+        <button class="vm-dir-btn" id="vmList">
+          <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          List
+        </button>
+      </div>
+      <div class="vm-section-label" style="margin-top:10px">Sort by</div>
+      <div class="vm-sort-row">
+        <button class="vm-opt" data-sort="name">Name</button>
+        <button class="vm-opt" data-sort="date">Date</button>
+        <button class="vm-opt" data-sort="size">Size</button>
+      </div>
+      <div class="vm-dir-row" style="margin-top:6px">
+        <button class="vm-dir-btn" id="vmAsc">↑ Asc</button>
+        <button class="vm-dir-btn" id="vmDesc">↓ Desc</button>
+      </div>
+      <div class="vm-hidden-row">
+        <span class="vm-hidden-label">Show hidden</span>
+        <label class="vm-switch">
+          <input type="checkbox" id="vmHiddenToggle">
+          <span class="vm-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- ── SIDEBAR DRAWER ── -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar-drawer" id="sidebarDrawer">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <img class="brand-mark brand-mark-lg" src="/brand.svg" alt="" />
+          <div>
+            <div class="sidebar-app-name">Hevi Explorer</div>
+            <div class="sidebar-app-ver">Private Media Vault</div>
+          </div>
+        </div>
+        <button class="icon-btn" id="sidebarClose" title="Close">
+          <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-item" id="sbHome">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Home
+        </button>
+        <button class="sidebar-item" id="sbBrowse">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Browse
+        </button>
+        <div class="sidebar-section-label">Categories</div>
+        <button class="sidebar-item" data-sidebar-cat="audio">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          Audio
+        </button>
+        <button class="sidebar-item" data-sidebar-cat="video">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          Videos
+        </button>
+        <button class="sidebar-item" data-sidebar-cat="image">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Images
+        </button>
+        <button class="sidebar-item" data-sidebar-cat="file">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Files
+        </button>
+        <button class="sidebar-item" data-sidebar-cat="archive">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+          Archives
+        </button>
+        <button class="sidebar-item" data-sidebar-cat="apk">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          APKs
+        </button>
+        <div class="sidebar-section-label hidden" id="sbCloudLabel">Cloud Storage</div>
+        <div id="sbCloudList"></div>
+      </nav>
+      <div class="sidebar-aerograb-row">
+        <div class="sidebar-aerograb-left">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/>
+            <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/>
+            <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/>
+            <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+          </svg>
+          <div>
+            <div class="sidebar-aerograb-name">AeroGrab</div>
+            <div class="sidebar-aerograb-sub">Gesture file transfer</div>
+          </div>
+        </div>
+        <label class="ag-toggle-switch">
+          <input type="checkbox" id="aeroGrabToggle">
+          <span class="ag-toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- ── Hevi Network Panel ── -->
+      <div class="hevi-net-section" id="heviNetSection">
+        <button class="hevi-net-header" id="heviNetHeader" aria-expanded="false">
+          <div class="hevi-net-header-left">
+            <span class="hevi-net-icon">🌐</span>
+            <div>
+              <div class="hevi-net-title">Hevi Network</div>
+              <div class="hevi-net-count" id="heviNetCount">Searching...</div>
+            </div>
+          </div>
+          <svg class="hevi-net-chevron" id="heviNetChevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <div class="hevi-net-list hidden" id="heviNetList">
+          <div class="hevi-net-empty" id="heviNetEmpty">Auto LAN is on. Open Hevi on another same-WiFi device and it will appear here.</div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="sidebar-item" id="sbSettings">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </button>
+        <!-- TWH Branding -->
+        <a href="/creator/" class="sidebar-twh-credit">
+          <img src="/twh-logo.png" alt="TWH" class="sidebar-twh-logo"/>
+          <div class="sidebar-twh-text">
+            <div class="sidebar-twh-name">Technical White Hat</div>
+            <div class="sidebar-twh-sub">Made with obsession by TWH</div>
+          </div>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── SEARCH BAR ── -->
+    <div class="search-bar" id="searchBar">
+      <div class="search-input-wrap">
+        <svg viewBox="0 0 24 24" class="search-icon">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.35-4.35" />
+        </svg>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search files..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="icon-btn" id="searchClearBtn">
+          <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── MAIN ── -->
+    <main class="main" id="main">
+      <!-- HOME VIEW -->
+      <div class="view" id="homeView">
+        <section class="categories-section">
+          <div class="categories-grid">
+            <div class="cat-item" data-cat="video">
+              <div class="cat-icon cat-video">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M15 10l5-3v10l-5-3M3 6h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"
+                  />
+                </svg>
+              </div>
+              <span>Videos</span>
+            </div>
+            <div class="cat-item" data-cat="image">
+              <div class="cat-icon cat-image">
+                <svg viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="M21 15l-5-5L5 21" />
+                </svg>
+              </div>
+              <span>Images</span>
+            </div>
+            <div class="cat-item" data-cat="file">
+              <div class="cat-icon cat-file">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <polyline points="14,2 14,8 20,8" />
+                </svg>
+              </div>
+              <span>Files</span>
+            </div>
+            <div class="cat-item" data-cat="archive">
+              <div class="cat-icon cat-archive">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4" />
+                </svg>
+              </div>
+              <span>Archives</span>
+            </div>
+            <div class="cat-item" data-cat="audio">
+              <div class="cat-icon cat-audio">
+                <svg viewBox="0 0 24 24">
+                  <path d="M9 18V5l12-2v13" />
+                  <circle cx="6" cy="18" r="3" />
+                  <circle cx="18" cy="16" r="3" />
+                </svg>
+              </div>
+              <span>Audio</span>
+            </div>
+            <div class="cat-item" data-browse>
+              <div class="cat-icon cat-browse">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                  />
+                </svg>
+              </div>
+              <span>Browse</span>
+            </div>
+            <div class="cat-item" id="uploadCatBtn">
+              <div class="cat-icon cat-upload">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </div>
+              <span>Upload</span>
+            </div>
+            <div class="cat-item" data-cat="apk">
+              <div class="cat-icon cat-apk">
+                <svg viewBox="0 0 24 24">
+                  <rect x="5" y="2" width="14" height="20" rx="2" />
+                  <line x1="12" y1="18" x2="12" y2="18" />
+                </svg>
+              </div>
+              <span>APKs</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="storage-section">
+          <div class="storage-card" id="storageCard" role="button" tabindex="0" aria-label="Open storage details">
+            <div class="storage-top">
+              <div>
+                <div class="storage-title">Storage</div>
+                <div class="storage-sub" id="storageSub">Calculating space…</div>
+              </div>
+              <button class="storage-manage-btn" id="storageManageBtn">Manage</button>
+            </div>
+            <div class="storage-meter" aria-hidden="true">
+              <div class="storage-meter-fill" id="storageMeterFill"></div>
+            </div>
+            <div class="storage-meta">
+              <span id="storageUsedText">Used —</span>
+              <span id="storageFreeText">Free —</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <span class="section-title">Recent Files</span>
+            <button class="view-all-btn" id="recentViewAllBtn">View All</button>
+          </div>
+          <div class="recent-grid" id="recentGrid">
+            <div class="loader-wrap"><div class="loader"></div></div>
+          </div>
+        </section>
+
+        <section class="section" id="favSection" style="display:none">
+          <div class="section-header">
+            <span class="section-title">⭐ Favorites</span>
+            <button class="view-all-btn" id="favViewAllBtn">View All</button>
+          </div>
+          <div class="recent-grid" id="favGrid"></div>
+        </section>
+
+        <section class="section" id="activeSection">
+          <div class="section-header">
+            <span class="section-title">📌 Active Folders</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="view-all-btn" id="managePinnedBtn">Manage</button>
+              <button class="view-all-btn" data-browse>View All</button>
+            </div>
+          </div>
+          <div class="folders-scroll" id="foldersScroll">
+            <div class="loader-wrap"><div class="loader"></div></div>
+          </div>
+        </section>
+
+        <!-- ── CLOUD STORAGE SECTION ── -->
+        <section class="section" id="cloudSection">
+          <div class="section-header">
+            <span class="section-title">☁️ Cloud Storage</span>
+            <button class="view-all-btn" id="cloudManageBtn">Manage</button>
+          </div>
+          <div class="cloud-cards-row" id="cloudCardsRow">
+            <div class="loader-wrap"><div class="loader"></div></div>
+          </div>
+        </section>
+
+        <!-- ── AEROGRAB · RECENT RECEIVES (only shown when history non-empty) ── -->
+        <section class="section hidden" id="aeroHistorySection">
+          <div class="section-header">
+            <span class="section-title">📥 Recent AeroGrab</span>
+            <button class="view-all-btn" id="aeroHistoryClearBtn">Clear</button>
+          </div>
+          <div class="ag-history-list" id="aeroHistoryList"></div>
+        </section>
+      </div>
+
+      <!-- BROWSER VIEW -->
+      <div class="view hidden" id="browserView">
+        <div class="browser-actions">
+          <button class="action-btn" id="backBtn">
+            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7" /></svg>
+            Back
+          </button>
+          <div class="action-right">
+            <button class="action-btn" id="newFolderBtn">
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                />
+                <line x1="12" y1="11" x2="12" y2="17" />
+                <line x1="9" y1="14" x2="15" y2="14" />
+              </svg>
+            </button>
+            <button class="action-btn" id="uploadBtn">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </button>
+            <div class="view-toggle">
+              <button class="icon-btn active" id="gridViewBtn" title="Grid">
+                <svg viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                </svg>
+              </button>
+              <button class="icon-btn" id="listViewBtn" title="List">
+                <svg viewBox="0 0 24 24">
+                  <line x1="8" y1="6" x2="21" y2="6" />
+                  <line x1="8" y1="12" x2="21" y2="12" />
+                  <line x1="8" y1="18" x2="21" y2="18" />
+                  <line x1="3" y1="6" x2="3.01" y2="6" />
+                  <line x1="3" y1="12" x2="3.01" y2="12" />
+                  <line x1="3" y1="18" x2="3.01" y2="18" />
+                </svg>
+              </button>
+              <button class="icon-btn" id="selectModeBtn" title="Select">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><polyline points="7 7 9 9 13 5"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Bulk action bar — visible only in select mode -->
+        <div class="bulk-bar hidden" id="bulkBar">
+          <span class="bulk-count" id="bulkCount">Tap files to select</span>
+          <div class="bulk-actions">
+            <button class="bulk-btn bulk-btn-dl" id="bulkDownloadBtn" disabled>
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </button>
+            <button class="bulk-btn bulk-btn-del" id="bulkDeleteBtn" disabled>
+              <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              Delete
+            </button>
+            <button class="bulk-btn bulk-btn-cancel" id="bulkCancelBtn">
+              <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Cancel
+            </button>
+          </div>
+        </div>
+        <div class="file-grid" id="fileGrid"></div>
+      </div>
+
+      <!-- CATEGORY VIEW -->
+      <div class="view hidden" id="catView">
+        <div class="browser-actions">
+          <button class="action-btn" id="catBackBtn">
+            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7" /></svg>
+            Back
+          </button>
+          <span class="cat-view-title" id="catViewTitle"></span>
+        </div>
+        <div class="file-grid" id="catGrid"></div>
+      </div>
+
+      <!-- SEARCH VIEW -->
+      <div class="view hidden" id="searchView">
+        <div class="search-results-header">
+          <span id="searchResultsLabel">Results</span>
+        </div>
+        <div class="file-grid" id="searchGrid"></div>
+      </div>
+
+      <!-- RECENT ALL VIEW -->
+      <div class="view hidden" id="recentAllView">
+        <div class="browser-actions">
+          <button class="action-btn" id="recentAllBackBtn">
+            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7" /></svg>
+            Back
+          </button>
+          <span class="cat-view-title">Recent Files</span>
+        </div>
+        <div class="file-grid" id="recentAllGrid"></div>
+      </div>
+
+      <!-- FAVORITES ALL VIEW -->
+      <div class="view hidden" id="favAllView">
+        <div class="browser-actions">
+          <button class="action-btn" id="favAllBackBtn">
+            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7" /></svg>
+            Back
+          </button>
+          <span class="cat-view-title">⭐ All Favorites</span>
+        </div>
+        <div class="fav-all-list" id="favAllList"></div>
+      </div>
+
+      <!-- CLOUD BROWSER VIEW -->
+      <div class="view hidden" id="cloudView">
+        <div class="browser-actions">
+          <button class="action-btn" id="cloudBrowserBackBtn">
+            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7" /></svg>
+            Back
+          </button>
+          <span class="cat-view-title" id="cloudBrowserTitle">Cloud</span>
+        </div>
+        <div class="cloud-breadcrumb" id="cloudBreadcrumb"></div>
+        <div class="file-grid" id="cloudGrid"></div>
+      </div>
+    </main>
+
+    <!-- ── MINI PLAYER ── -->
+    <div class="mini-player" id="miniPlayer">
+      <div class="mini-art" id="miniArt">
+        <svg viewBox="0 0 24 24" class="mini-art-icon"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      </div>
+      <div class="mini-info">
+        <div class="mini-title" id="miniTitle">Track</div>
+        <div class="mini-progress"><div class="mini-progress-fill" id="miniProgressFill"></div></div>
+      </div>
+      <button class="mini-btn" id="miniPlayBtn" title="Play / Pause">
+        <svg viewBox="0 0 24 24" id="miniPlayIcon">
+          <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+      <button class="mini-btn" id="miniNextBtn" title="Next Track">
+        <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4" fill="currentColor" stroke="none"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+      </button>
+      <button class="mini-btn mini-close-btn" id="miniCloseBtn" title="Stop">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- ── BOTTOM NAV ── -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" id="navFiles">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+          />
+        </svg>
+        <span>Files</span>
+      </button>
+      <button class="nav-item" id="navBrowse">
+        <svg viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <span>Browse</span>
+      </button>
+      <button class="nav-item nav-upload-center" id="navUpload">
+        <div class="nav-upload-btn">
+          <svg viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </div>
+      </button>
+      <button class="nav-item" id="navSettings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>Settings</span>
+      </button>
+      <button class="nav-item nav-wan" id="navWan">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M2 12h20" />
+          <path d="M12 2a15.3 15.3 0 0 1 0 20M12 2a15.3 15.3 0 0 0 0 20" />
+        </svg>
+        <span>WAN</span>
+      </button>
+    </nav>
+
+    <!-- ── VIDEO PLAYER MODAL ── -->
+    <div class="modal hidden" id="videoModal">
+      <div class="vp-wrap" id="vpWrap">
+        <!-- Header: Back + Title + Cast + Download + Fullscreen -->
+        <div class="vp-header" id="vpHeader">
+          <button class="vp-icon-btn" id="vpClose">
+            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7" /></svg>
+          </button>
+          <span class="vp-title" id="vpTitle">Video</span>
+          <button class="vp-icon-btn" id="vpCastBtn" title="Cast to TV">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="2" cy="20" r="1" fill="currentColor" stroke="none"/>
+            </svg>
+          </button>
+          <a class="vp-icon-btn" id="vpDownloadBtn" title="Download">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </a>
+          <button class="vp-icon-btn" id="vpFsBtn" title="Fullscreen">
+            <svg viewBox="0 0 24 24" id="vpFsIcon">
+              <polyline points="15 3 21 3 21 9" />
+              <polyline points="9 21 3 21 3 15" />
+              <line x1="21" y1="3" x2="14" y2="10" />
+              <line x1="3" y1="21" x2="10" y2="14" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Stage -->
+        <div class="vp-stage" id="vpStage">
+          <video id="videoPlayer" preload="metadata" playsinline></video>
+
+          <!-- Simulated brightness overlay -->
+          <!-- Format-not-supported fallback panel -->
+          <div class="vp-format-fallback hidden" id="vpFormatFallback">
+            <div class="vp-fallback-icon">⚠️</div>
+            <div class="vp-fallback-title">Format may not be fully supported</div>
+            <div class="vp-fallback-msg">Your browser cannot natively play this format.<br>Open in <strong>VLC</strong> or another media player, or download below.</div>
+            <a class="vp-fallback-dl-btn" id="vpFallbackDlBtn">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download File
+            </a>
+          </div>
+
+          <div class="vp-brightness" id="vpBrightness"></div>
+
+          <!-- Invisible gesture capture layer -->
+          <div class="vp-gesture-layer" id="vpGestureLayer"></div>
+
+          <!-- Center play/pause flash -->
+          <div class="vp-flash" id="vpFlash">
+            <div class="vp-flash-ring"></div>
+            <svg class="vp-flash-icon" viewBox="0 0 24 24" id="vpFlashIcon">
+              <polygon points="5 3 19 12 5 21 5 3" fill="white" stroke="none" />
+            </svg>
+          </div>
+
+          <!-- Double-tap seek indicators -->
+          <div class="vp-seek-ind vp-seek-ind-left" id="vpSeekLeft">
+            <div class="vp-seek-ripple"></div>
+            <svg viewBox="0 0 24 24">
+              <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" stroke="white" fill="none" />
+            </svg>
+            <span id="vpSeekLeftTxt">-10s</span>
+          </div>
+          <div class="vp-seek-ind vp-seek-ind-right" id="vpSeekRight">
+            <div class="vp-seek-ripple"></div>
+            <svg viewBox="0 0 24 24">
+              <path d="M13 17l5-5-5-5M6 17l5-5-5-5" stroke="white" fill="none" />
+            </svg>
+            <span id="vpSeekRightTxt">+10s</span>
+          </div>
+
+          <!-- Volume / Brightness gesture HUD -->
+          <div class="vp-gesture-hud hidden" id="vpGestureHud">
+            <div class="vp-gesture-hud-icon" id="vpHudIcon"></div>
+            <div class="vp-gesture-hud-track">
+              <div class="vp-gesture-hud-fill" id="vpHudFill"></div>
+            </div>
+            <span class="vp-gesture-hud-val" id="vpHudVal"></span>
+          </div>
+
+          <!-- Speed popup (anchored above bottom controls) -->
+          <div class="vp-speed-popup hidden" id="vpSpeedPopup">
+            <div class="vp-speed-header">Playback Speed</div>
+            <div class="vp-speed-list" id="vpSpeedList"></div>
+          </div>
+        </div>
+
+        <!-- Controls bar -->
+        <div class="vp-controls" id="vpControls">
+          <!-- Progress row -->
+          <div class="vp-progress-row">
+            <span class="vp-time-label" id="vpCurrentTime">0:00</span>
+            <div class="vp-progress-track" id="vpProgressTrack">
+              <div class="vp-progress-bg">
+                <div class="vp-progress-buf" id="vpProgressBuf"></div>
+                <div class="vp-progress-fill" id="vpProgressFill"></div>
+              </div>
+              <div class="vp-progress-dot" id="vpProgressDot"></div>
+              <div class="vp-progress-tooltip" id="vpProgressTooltip">
+                <img id="vpProgressThumb" alt="" />
+                <span id="vpProgressTooltipTime">0:00</span>
+              </div>
+            </div>
+            <span class="vp-time-label" id="vpDuration">0:00</span>
+          </div>
+
+          <!-- Button row: left=play+vol (desktop), right=utility (all), mobile=center utility -->
+          <div class="vp-btn-row">
+            <!-- LEFT GROUP: Play + Volume (desktop only) -->
+            <div class="vp-btn-left vp-desktop-only">
+              <button class="vp-icon-btn vp-play-btn" id="vpPlayBtn">
+                <svg viewBox="0 0 24 24" id="vpPlayIcon">
+                  <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none" />
+                </svg>
+              </button>
+              <div class="vp-vol-wrap">
+                <button class="vp-icon-btn vp-sm vp-mute-btn" id="vpMuteBtn" title="Mute">
+                  <svg viewBox="0 0 24 24" id="vpVolIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" id="vpVolWave1"/>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" id="vpVolWave2"/>
+                  </svg>
+                </button>
+                <div class="vp-vol-popup">
+                  <span class="vp-vol-pct-label" id="vpVolPct">100%</span>
+                  <div class="vp-vol-vert-slider">
+                    <input type="range" class="vp-vol-range" id="vpVolRange" min="0" max="1" step="0.01" value="1" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- RIGHT GROUP: Utility buttons (always visible, centered on mobile) -->
+            <div class="vp-btn-right">
+              <button class="vp-tc-btn vp-tc-icon" id="vpPrevBtn" title="Previous Video">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="19 20 9 12 19 4 19 20" fill="currentColor" stroke="none"/>
+                  <line x1="5" y1="4" x2="5" y2="20"/>
+                </svg>
+              </button>
+              <button class="vp-tc-btn vp-tc-icon" id="vpNextBtn" title="Next Video">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 4 15 12 5 20 5 4" fill="currentColor" stroke="none"/>
+                  <line x1="19" y1="4" x2="19" y2="20"/>
+                </svg>
+              </button>
+              <button class="vp-tc-btn" id="vpSpeedBtn" title="Playback Speed">1×</button>
+              <button class="vp-tc-btn vp-tc-icon" id="vpAspectBtn" title="Aspect Ratio">
+                <svg viewBox="0 0 24 24">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="M7 15l3-3-3-3M17 9l-3 3 3 3" />
+                </svg>
+              </button>
+              <button class="vp-tc-btn vp-tc-icon" id="vpTheaterBtn" title="Theater Mode">
+                <svg viewBox="0 0 24 24">
+                  <rect x="2" y="6" width="20" height="14" rx="2" />
+                  <path d="M7 2h10" />
+                </svg>
+              </button>
+              <button class="vp-tc-btn vp-tc-icon" id="vpPipBtn" title="Picture-in-Picture">
+                <svg viewBox="0 0 24 24">
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <rect x="12" y="11" width="9" height="6" rx="1" />
+                </svg>
+              </button>
+              <!-- Info button: center on mobile, right on desktop -->
+              <button class="vp-tc-btn vp-tc-icon vp-info-btn" id="vpInfoBtn" title="Video Info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="8.01"/>
+                  <polyline points="11 12 12 12 12 16"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info panel (inside player, slides up from bottom) -->
+        <div class="vp-info-panel hidden" id="vpInfoPanel">
+          <div class="vp-info-panel-head">
+            <span class="vp-info-panel-title">Video Info</span>
+            <button class="vp-info-panel-close" id="vpInfoClose">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="vp-info-panel-body" id="vpInfoBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── IMAGE VIEWER MODAL ── -->
+    <div class="modal hidden" id="imageModal">
+      <div class="iv-wrap" id="ivWrap">
+        <!-- Header (back + title only) -->
+        <div class="iv-header" id="ivHeader">
+          <button class="iv-ctrl-btn" id="imageClose" title="Back">
+            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7" /></svg>
+          </button>
+          <span class="iv-title" id="imageTitle"></span>
+        </div>
+
+        <!-- Stage -->
+        <div class="iv-stage" id="ivStage">
+
+          <!-- 3-slot horizontal track (prev · cur · next) -->
+          <div class="iv-track" id="ivTrack">
+            <!-- Prev slot -->
+            <div class="iv-slot" id="ivSlotPrev">
+              <img class="iv-slot-img" id="ivImgPrev" alt="" draggable="false" decoding="async" />
+            </div>
+            <!-- Current slot (zoom/pan happens inside ivImgWrap) -->
+            <div class="iv-slot" id="ivSlotCur">
+              <div class="iv-img-wrap" id="ivImgWrap">
+                <img id="imagePlayer" alt="" draggable="false" decoding="async" />
+                <div class="iv-unsupported-panel hidden" id="ivUnsupportedPanel">
+                  <div class="iv-unsupported-card">
+                    <div class="iv-unsupported-badge" id="ivUnsupportedBadge">IMG</div>
+                    <div class="iv-unsupported-title" id="ivUnsupportedTitle">Preview not supported</div>
+                    <div class="iv-unsupported-msg" id="ivUnsupportedMsg">Please download to view original quality.</div>
+                    <button class="iv-heic-preview-btn hidden" id="ivHeicPreviewBtn" type="button">
+                      <span class="iv-heic-spinner hidden" id="ivHeicSpinner"></span>
+                      <span id="ivHeicBtnText">Generate High-Quality Preview</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="iv-load-ring" id="ivLoadRing"></div>
+              </div>
+            </div>
+            <!-- Next slot -->
+            <div class="iv-slot" id="ivSlotNext">
+              <img class="iv-slot-img" id="ivImgNext" alt="" draggable="false" decoding="async" />
+            </div>
+          </div>
+
+          <!-- Nav arrows -->
+          <button class="iv-nav iv-nav-prev" id="imagePrev" title="Previous">
+            <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" /></svg>
+          </button>
+          <button class="iv-nav iv-nav-next" id="imageNext" title="Next">
+            <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg>
+          </button>
+
+          <!-- Pinch dot -->
+          <div class="iv-pinch-dot hidden" id="ivPinchDot"></div>
+
+          <!-- Swipe glow -->
+          <div class="iv-swipe-glow" id="ivSwipeGlow"></div>
+
+          <!-- Zoom badge -->
+          <div class="iv-zoom-badge hidden" id="ivZoomBadge">100%</div>
+        </div>
+
+        <!-- Top-right floating controls (filter + info + download + more) -->
+        <div class="iv-top-right" id="ivTopRight">
+          <button class="iv-ctrl-btn" id="ivFilterBtn" title="Filters">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          </button>
+          <button class="iv-ctrl-btn" id="ivInfoBtn" title="Image Info">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </button>
+          <a class="iv-ctrl-btn" id="imageDl" title="Download">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </a>
+          <button class="iv-ctrl-btn" id="ivMoreBtn" title="More options">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg>
+          </button>
+        </div>
+
+        <!-- More menu dropdown -->
+        <div class="iv-more-menu hidden" id="ivMoreMenu">
+          <button class="iv-more-item" id="ivZoomInBtn">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="7" x2="11" y2="15"/><line x1="7" y1="11" x2="15" y2="11"/></svg>
+            Zoom In
+          </button>
+          <button class="iv-more-item" id="ivZoomOutBtn">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="7" y1="11" x2="15" y2="11"/></svg>
+            Zoom Out
+          </button>
+          <button class="iv-more-item" id="ivRotateLeftBtn">
+            <svg viewBox="0 0 24 24"><path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38"/></svg>
+            Rotate Left
+          </button>
+          <button class="iv-more-item" id="ivRotateRightBtn">
+            <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
+            Rotate Right
+          </button>
+        </div>
+
+        <!-- Filter bar (slide up) -->
+        <div class="iv-filter-bar" id="ivFilterBar">
+          <button class="iv-filter-chip active" data-filter="">Original</button>
+          <button class="iv-filter-chip" data-filter="grayscale(100%)">Grayscale</button>
+          <button class="iv-filter-chip" data-filter="sepia(90%)">Sepia</button>
+          <button class="iv-filter-chip" data-filter="contrast(1.4) saturate(1.6)">Vivid</button>
+          <button class="iv-filter-chip" data-filter="brightness(0.75) contrast(1.15) saturate(0.8)">Cinematic</button>
+          <button class="iv-filter-chip" data-filter="">Reset</button>
+        </div>
+
+        <!-- Metadata modal (glassmorphism) -->
+        <div class="iv-meta-modal hidden" id="ivMetaModal">
+          <div class="iv-meta-header">
+            <span class="iv-meta-title" id="ivMetaTitle">Image Info</span>
+            <button class="iv-ctrl-btn" id="ivMetaClose" title="Close">
+              <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <div class="iv-meta-body" id="ivMetaBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AUDIO PLAYER MODAL ── -->
+    <div class="modal hidden" id="audioModal">
+      <div class="modal-backdrop" id="audioBackdrop"></div>
+      <div class="mp-container" id="mpContainer">
+        <div class="mp-ambient-blur" id="mpAmbientBlur"></div>
+
+        <!-- Header -->
+        <div class="mp-header">
+          <button class="icon-btn" id="audioClose" title="Back">
+            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          </button>
+          <span class="mp-header-label">NOW PLAYING</span>
+          <div class="mp-header-actions">
+            <!-- Volume: desktop only, popup slider -->
+            <div class="mp-vol-popup-wrap" id="mpVolWrap">
+              <button class="icon-btn" id="mpVolMute" title="Volume">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="mpVolIcon">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                </svg>
+              </button>
+              <div class="mp-vol-popup" id="mpVolPopup">
+                <span class="mp-vol-pct" id="mpVolPct">100%</span>
+                <input type="range" class="mp-vol-slider" id="mpVolSlider" min="0" max="1" step="0.02" value="1" orient="vertical">
+                <svg class="mp-vol-popup-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                </svg>
+              </div>
+            </div>
+            <a class="icon-btn" id="audioDl" title="Download">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </a>
+            <!-- More menu -->
+            <div class="mp-more-wrap" id="mpMoreWrap">
+              <button class="icon-btn" id="mpMoreBtn" title="More options">
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+              </button>
+              <div class="mp-more-popup" id="mpMorePopup">
+                <div class="mp-more-section-label">Visualizer</div>
+                <div class="mp-more-viz-row">
+                  <button class="mp-viz-mode-btn" data-mode="bars" id="mpVizBars">
+                    <svg viewBox="0 0 20 14" fill="currentColor"><rect x="0" y="4" width="3" height="10" rx="1"/><rect x="5" y="1" width="3" height="13" rx="1"/><rect x="10" y="5" width="3" height="9" rx="1"/><rect x="15" y="2" width="3" height="12" rx="1"/></svg>
+                    Bars
+                  </button>
+                  <button class="mp-viz-mode-btn" data-mode="wave" id="mpVizWave">
+                    <svg viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M0 7 Q2.5 2 5 7 Q7.5 12 10 7 Q12.5 2 15 7 Q17.5 12 20 7"/></svg>
+                    Wave
+                  </button>
+                  <button class="mp-viz-mode-btn active" data-mode="circle" id="mpVizCircle">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="6"/><circle cx="10" cy="10" r="3"/></svg>
+                    Circle
+                  </button>
+                  <button class="mp-viz-mode-btn" data-mode="off" id="mpVizOff">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></svg>
+                    Off
+                  </button>
+                </div>
+                <div class="mp-more-divider"></div>
+                <div class="mp-more-section-label">Track</div>
+                <button class="mp-more-action-btn danger" id="mpDeleteTrackBtn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  Delete this file
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Album Art -->
+        <div class="mp-art-section" id="mpArtSection">
+          <canvas class="mp-circle-canvas" id="mpCircleCanvas"></canvas>
+          <div class="mp-art-glow" id="mpArtGlow"></div>
+          <div class="mp-art" id="mpArt">
+            <svg viewBox="0 0 24 24" class="mp-art-icon">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+            <div class="mp-art-vinyl-overlay" id="mpVinylOverlay"></div>
+          </div>
+        </div>
+
+        <!-- Track Info -->
+        <div class="mp-track-info">
+          <div class="mp-track-title-wrap">
+            <div class="mp-track-title" id="mpTitle">Track Title</div>
+          </div>
+          <div class="mp-track-artist" id="mpArtist">Unknown Artist</div>
+        </div>
+
+        <!-- Visualizer -->
+        <div class="mp-viz-wrap">
+          <canvas class="mp-visualizer" id="mpVisualizer"></canvas>
+        </div>
+
+        <!-- Progress -->
+        <div class="mp-progress-wrap">
+          <div class="mp-progress-bar" id="mpProgressBar">
+            <div class="mp-progress-track-bg">
+              <div class="mp-progress-fill" id="mpProgressFill"></div>
+            </div>
+            <div class="mp-progress-dot" id="mpProgressDot"></div>
+          </div>
+          <div class="mp-time-row">
+            <span class="mp-time" id="mpCurrentTime">0:00</span>
+            <span class="mp-time" id="mpDuration">0:00</span>
+          </div>
+        </div>
+
+        <!-- Main Controls -->
+        <div class="mp-controls">
+          <button class="mp-ctrl-secondary" id="mpShuffleBtn" title="Shuffle">
+            <svg viewBox="0 0 24 24">
+              <polyline points="16 3 21 3 21 8"/>
+              <line x1="4" y1="20" x2="21" y2="3"/>
+              <polyline points="21 16 21 21 16 21"/>
+              <line x1="15" y1="15" x2="21" y2="21"/>
+            </svg>
+          </button>
+          <button class="mp-ctrl-primary" id="mpPrevBtn" title="Previous">
+            <svg viewBox="0 0 24 24">
+              <polygon points="19 20 9 12 19 4 19 20"/>
+              <line x1="5" y1="19" x2="5" y2="5"/>
+            </svg>
+          </button>
+          <button class="mp-ctrl-play" id="mpPlayBtn" title="Play/Pause">
+            <svg viewBox="0 0 24 24" id="mpPlayIcon">
+              <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/>
+            </svg>
+          </button>
+          <button class="mp-ctrl-primary" id="mpNextBtn" title="Next">
+            <svg viewBox="0 0 24 24">
+              <polygon points="5 4 15 12 5 20 5 4"/>
+              <line x1="19" y1="5" x2="19" y2="19"/>
+            </svg>
+          </button>
+          <button class="mp-ctrl-secondary" id="mpRepeatBtn" title="Repeat">
+            <svg viewBox="0 0 24 24">
+              <polyline points="17 1 21 5 17 9"/>
+              <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+              <polyline points="7 23 3 19 7 15"/>
+              <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Sleep Timer + Favorite row -->
+        <div class="mp-sleep-row">
+          <button class="mp-sleep-trigger" id="mpFavBtn" title="Favorite">
+            <svg viewBox="0 0 24 24" id="mpFavIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            <span>Favorite</span>
+          </button>
+          <button class="mp-sleep-trigger" id="mpSleepBtn" title="Sleep Timer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <span id="mpSleepLabel">Sleep</span>
+          </button>
+          <!-- Sleep options popup -->
+          <div class="mp-sleep-opts" id="mpSleepOpts">
+            <button class="mp-sleep-opt" data-min="0">Off</button>
+            <button class="mp-sleep-opt" data-min="15">15 min</button>
+            <button class="mp-sleep-opt" data-min="30">30 min</button>
+            <button class="mp-sleep-opt" data-min="45">45 min</button>
+            <button class="mp-sleep-opt" data-min="60">60 min</button>
+            <button class="mp-sleep-opt" data-min="-1">End of track</button>
+          </div>
+        </div>
+
+        <!-- Up Next toggle (bottom bar) -->
+        <div class="mp-queue-section" id="mpQueueSection">
+          <button class="mp-queue-toggle" id="mpQueueToggle">
+            <svg viewBox="0 0 24 24" width="16" height="16"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span id="mpQueueLabel">Up Next</span>
+            <svg class="mp-queue-chevron" viewBox="0 0 24 24" width="16" height="16"><path d="M6 15l6-6 6 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Queue panel — slides up over the player -->
+        <div class="mp-queue-panel" id="mpQueuePanel">
+          <div class="mp-queue-panel-hdr">
+            <button class="icon-btn mp-queue-panel-close" id="mpQueueClose" title="Close">
+              <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <span class="mp-queue-panel-title" id="mpQueuePanelLabel">Up Next</span>
+            <div style="width:36px"></div>
+          </div>
+          <div class="mp-queue-list" id="mpQueueList"></div>
+        </div>
+
+        <audio id="audioPlayer" preload="metadata"></audio>
+      </div>
+    </div>
+
+    <!-- ── STORAGE DETAILS MODAL ── -->
+    <div class="modal hidden" id="storageModal">
+      <div class="modal-backdrop" id="storageBackdrop"></div>
+      <div class="storage-modal">
+        <div class="player-header">
+          <button class="icon-btn" id="storageClose">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+          <span class="player-title">Storage Details</span>
+          <button class="icon-btn" id="storageRefreshBtn" title="Refresh">
+            <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          </button>
+        </div>
+        <div class="storage-modal-body">
+          <div class="storage-total-card">
+            <div class="storage-total-main">
+              <strong id="storageModalUsed">— used</strong>
+              <span id="storageModalFree">— free</span>
+            </div>
+            <div class="storage-meter storage-meter-large">
+              <div class="storage-meter-fill" id="storageModalMeterFill"></div>
+            </div>
+            <div class="storage-root" id="storageRootText"></div>
+          </div>
+          <div class="storage-breakdown" id="storageBreakdown">
+            <div class="loader-wrap"><div class="loader"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── WAN TUNNEL QUICK PANEL ── -->
+    <div class="modal hidden" id="wanQuickModal">
+      <div class="modal-backdrop" id="wanQuickBackdrop"></div>
+      <div class="wan-quick-modal">
+        <div class="player-header">
+          <button class="icon-btn" id="wanQuickClose">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+          <span class="player-title">WAN Tunnel</span>
+          <button class="icon-btn" id="quickWanRefreshBtn" title="Refresh">
+            <svg viewBox="0 0 24 24" id="quickWanRefreshIcon"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </div>
+        <div class="wan-quick-body">
+          <div class="wan-quick-hero">
+            <div class="wan-quick-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 0 20M12 2a15.3 15.3 0 0 0 0 20"/></svg>
+            </div>
+            <div>
+              <div class="wan-quick-title">Remote access control</div>
+              <div class="wan-quick-sub">Start a temporary public HTTPS link, copy it, scan QR, or stop access from here.</div>
+            </div>
+            <div class="st-status-dot" id="quickWanDot"></div>
+          </div>
+
+          <div class="wan-quick-status">
+            <span id="quickWanStatusTxt">Checking…</span>
+          </div>
+
+          <div class="st-inset-box hidden" id="quickWanNoInstall">
+            <div class="st-inset-icon">⚠️</div>
+            <div class="st-inset-body">
+              <div class="st-inset-title">cloudflared not installed</div>
+              <div class="st-inset-sub" id="quickWanInstallPlatformTxt">Detecting platform…</div>
+              <button class="st-action-btn" id="quickWanInstallBtn">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Install cloudflared Automatically
+              </button>
+              <button class="st-mini-btn" id="quickWanInstallLogBtn" style="margin-top:6px;display:none">View Log</button>
+              <div class="hidden" id="quickWanInstallLogWrap">
+                <pre id="quickWanInstallLog" class="st-log-box"></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="st-inset-box hidden" id="quickWanNoInternet">
+            <div class="st-inset-icon">📡</div>
+            <div class="st-inset-body">
+              <div class="st-inset-title">No internet connection</div>
+              <div class="st-inset-sub">Connect to internet to start WAN tunnel</div>
+            </div>
+          </div>
+
+          <div class="wan-url-box hidden" id="quickWanUrlBox">
+            <div class="st-url-row">
+              <svg viewBox="0 0 24 24" width="14" height="14" style="flex-shrink:0;color:var(--accent)"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span class="st-url-val" id="quickWanUrlVal"></span>
+              <button class="st-mini-btn" id="quickWanCopyBtn">Copy</button>
+            </div>
+            <button class="st-mini-btn" id="quickWanQrBtn" style="margin-top:8px">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Show QR Code
+            </button>
+            <div class="lan-qr-collapse hidden" id="quickWanQrCollapse">
+              <div class="st-qr-wrap" style="margin-top:10px">
+                <img id="quickWanQrImg" class="st-qr-img" alt="WAN QR" />
+                <div class="st-qr-label">Scan to access from anywhere</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wan-quick-actions">
+            <button class="st-action-btn" id="quickWanStartBtn">
+              <svg viewBox="0 0 24 24" width="14" height="14"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></svg>
+              Start Tunnel
+            </button>
+            <button class="st-action-btn st-action-danger hidden" id="quickWanStopBtn">
+              <svg viewBox="0 0 24 24" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor" stroke="none"/></svg>
+              Stop Tunnel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── UPLOAD MODAL ── -->
+    <div class="modal hidden" id="uploadModal">
+      <div class="modal-backdrop" id="uploadBackdrop"></div>
+      <div class="upload-container">
+        <div class="player-header">
+          <button class="icon-btn" id="uploadClose">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+          <span class="player-title">Upload File</span>
+        </div>
+        <div class="drop-zone" id="dropZone">
+          <svg viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <p>Drop files here or click to browse</p>
+          <input type="file" id="fileInput" multiple />
+        </div>
+        <div class="upload-list" id="uploadList"></div>
+        <div class="upload-actions">
+          <button class="btn-primary" id="startUploadBtn">Upload</button>
+          <button class="btn-cancel hidden" id="cancelUploadBtn">Cancel Upload</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TEXT VIEWER MODAL ── -->
+    <div class="modal hidden" id="textModal">
+      <div class="modal-backdrop" id="textBackdrop"></div>
+      <div class="text-container">
+        <div class="player-header">
+          <button class="icon-btn" id="textClose">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+          <span class="player-title" id="textTitle"></span>
+          <a class="icon-btn" id="textDl" title="Download">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </a>
+        </div>
+        <pre class="text-content" id="textContent"></pre>
+      </div>
+    </div>
+
+    <!-- ── PDF VIEWER MODAL ── -->
+    <div class="modal hidden" id="pdfModal">
+      <div class="modal-backdrop" id="pdfBackdrop"></div>
+      <div class="pdf-container">
+        <div class="player-header">
+          <button class="icon-btn" id="pdfClose">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+          <span class="player-title" id="pdfTitle"></span>
+          <a class="icon-btn" id="pdfDl" title="Download">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </a>
+        </div>
+        <div class="pdf-zoom-bar">
+          <button class="pdf-zoom-btn" id="pdfZoomOut">−</button>
+          <span class="pdf-zoom-label" id="pdfZoomLabel">100%</span>
+          <button class="pdf-zoom-btn" id="pdfZoomIn">+</button>
+          <span class="pdf-zoom-hint" id="pdfZoomHint">Shift + Scroll to zoom</span>
+        </div>
+        <div class="pdf-canvas-wrap" id="pdfCanvasWrap">
+          <div class="pdf-zoom-inner" id="pdfZoomInner">
+            <div class="pdf-loading" id="pdfLoading">
+              <div class="pdf-spinner"></div>
+              <span>Loading PDF…</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ARCHIVE VIEWER MODAL ── -->
+    <div class="modal hidden" id="archiveModal">
+      <div class="modal-backdrop" id="archiveBackdrop"></div>
+      <div class="archive-container">
+        <div class="player-header">
+          <button class="icon-btn" id="archiveClose">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+          <span class="player-title" id="archiveTitle"></span>
+          <a class="icon-btn" id="archiveDl" title="Download">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </a>
+        </div>
+        <div class="archive-search-bar">
+          <input type="text" id="archiveSearchInput" placeholder="Filter files..." autocomplete="off" />
+        </div>
+        <div class="archive-body" id="archiveBody">
+          <div class="loader-wrap"><div class="loader"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SETTINGS MODAL
+    ═══════════════════════════════════════════════════════════ -->
+    <div class="modal hidden" id="settingsModal">
+      <div class="modal-backdrop" id="settingsBackdrop"></div>
+      <div class="st-wrap">
+
+        <!-- Settings Page -->
+        <div class="st-page" id="stMainPage">
+          <div class="st-header">
+            <button class="st-back-btn" id="settingsClose">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+            <span class="st-header-title">Settings</span>
+            <div style="width:36px"></div>
+          </div>
+
+          <div class="st-body">
+
+            <!-- App banner -->
+            <div class="st-app-banner" id="aboutCard">
+              <div class="st-app-logo">
+                <img src="/brand.svg" alt="" />
+              </div>
+              <div class="st-app-meta">
+                <div class="st-app-name">Hevi Explorer</div>
+                <div class="st-app-sub">Private Media Vault</div>
+              </div>
+              <div class="st-app-arrow">
+                <span class="st-ver-badge" id="updateCurrentVer">v1.0.0</span>
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </div>
+            </div>
+
+            <!-- Appearance -->
+            <div class="st-group-label">Appearance</div>
+            <div class="st-group" id="wanSection">
+              <div class="st-row">
+                <div class="st-ri st-ri-purple">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20c-2.76 0-5-4.48-5-10S9.24 2 12 2z"/><path d="M2 12h20"/></svg>
+                </div>
+                <div class="st-row-left">
+                  <span class="st-row-label">Theme</span>
+                  <span class="st-row-sub">Choose dark or light mode. Your preference is saved and applied every time you open the app.</span>
+                </div>
+              </div>
+              <div class="st-inner-sep"></div>
+              <div class="st-theme-row">
+                <div class="s-theme-toggle" id="themeToggleWrap">
+                  <button class="s-theme-pill" data-theme="dark" id="themeDarkBtn">🌙 Dark</button>
+                  <button class="s-theme-pill" data-theme="light" id="themeLightBtn">☀️ Light</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Install as App (PWA) -->
+            <div class="st-group-label">App</div>
+            <div class="st-group" id="installAppGroup">
+              <div class="st-row st-row-action" id="installAppRow">
+                <div class="st-ri st-ri-teal">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+                </div>
+                <div class="st-row-left">
+                  <span class="st-row-label">Install Hevi as an App</span>
+                  <span class="st-row-sub" id="installAppSub">Install Hevi Explorer on your device like a real app — opens in its own window, works offline, and lives on your home screen.</span>
+                </div>
+                <button class="btn-primary" id="installAppBtn" style="white-space:nowrap">Install</button>
+              </div>
+            </div>
+
+            <!-- Security -->
+            <div class="st-group-label">Security</div>
+            <div class="st-group">
+              <div class="st-row st-row-toggle">
+                <div class="st-ri st-ri-red">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <div class="st-row-left">
+                  <span class="st-row-label">Password Lock</span>
+                  <span class="st-row-sub">Protect the vault with a custom password. Anyone trying to access your files will need to enter it first.</span>
+                </div>
+                <label class="vm-switch">
+                  <input type="checkbox" id="pwToggle">
+                  <span class="vm-slider"></span>
+                </label>
+              </div>
+              <div class="pw-fields hidden" id="pwFields">
+                <div class="st-inner-sep"></div>
+                <div id="pwCurrentWrap" class="hidden">
+                  <div class="st-input-wrap">
+                    <input type="password" class="st-input" id="pwCurrentInput" placeholder="Current password" />
+                  </div>
+                </div>
+                <div class="st-input-wrap">
+                  <input type="password" class="st-input" id="pwNewInput" placeholder="New password (min 4 chars)" />
+                </div>
+                <div class="st-input-wrap">
+                  <input type="password" class="st-input" id="pwConfirmInput" placeholder="Confirm new password" />
+                </div>
+                <div class="pw-error hidden" id="pwError"></div>
+                <button class="st-save-btn" id="pwSaveBtn">Save Password</button>
+              </div>
+            </div>
+
+            <!-- LAN Access -->
+            <div class="st-group-label">Network — LAN</div>
+            <div class="st-group">
+              <div class="st-row">
+                <div class="st-ri st-ri-blue">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
+                </div>
+                <div class="st-row-left">
+                  <span class="st-row-label">Local IP Addresses</span>
+                  <span class="st-row-sub">Open the vault from any device on the same Wi-Fi. Scan the QR code or type your local IP in a browser.</span>
+                </div>
+                <button class="st-mini-btn" id="lanQrBtn">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  QR
+                </button>
+              </div>
+              <div class="lan-qr-collapse hidden" id="lanQrCollapse">
+                <div class="st-inner-sep"></div>
+                <div class="st-qr-wrap">
+                  <img id="qrImg" src="/api/qr" alt="QR Code" class="st-qr-img" />
+                  <div class="st-qr-label">Scan to open on another device</div>
+                </div>
+              </div>
+              <div class="st-inner-sep"></div>
+              <div id="lanIPs" class="lan-ips" style="padding:0 2px 4px"></div>
+            </div>
+
+            <!-- WAN Access -->
+            <div class="st-group-label">Network — WAN (Internet)</div>
+            <div class="st-group">
+              <div class="st-row">
+                <div class="st-ri st-ri-green">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                </div>
+                <div class="st-row-left">
+                  <span class="st-row-label">Cloudflare Tunnel</span>
+                  <span class="st-row-sub">Creates a temporary HTTPS public link for accessing your files from outside your home network. No router setup needed.</span>
+                </div>
+                <div class="st-status-dot" id="wanDot"></div>
+              </div>
+              <div class="st-inner-sep"></div>
+              <div class="st-row" style="padding-top:8px;padding-bottom:8px">
+                <div class="st-ri" style="background:transparent;width:36px"></div>
+                <span class="st-row-sub" id="wanStatusTxt" style="flex:1">Checking…</span>
+              </div>
+
+              <!-- Not installed -->
+              <div class="st-inset-box hidden" id="wanNoInstall">
+                <div class="st-inset-icon">⚠️</div>
+                <div class="st-inset-body">
+                  <div class="st-inset-title">cloudflared not installed</div>
+                  <div class="st-inset-sub" id="wanInstallPlatformTxt">Detecting platform…</div>
+                  <button class="st-action-btn" id="wanInstallBtn">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Install cloudflared Automatically
+                  </button>
+                  <button class="st-mini-btn" id="wanInstallLogBtn" style="margin-top:6px;display:none">View Log</button>
+                  <div class="hidden" id="wanInstallLogWrap">
+                    <pre id="wanInstallLog" class="st-log-box"></pre>
+                  </div>
+                </div>
+              </div>
+
+              <!-- No internet -->
+              <div class="st-inset-box hidden" id="wanNoInternet">
+                <div class="st-inset-icon">📡</div>
+                <div class="st-inset-body">
+                  <div class="st-inset-title">No internet connection</div>
+                  <div class="st-inset-sub">Connect to internet to start WAN tunnel</div>
+                </div>
+              </div>
+
+              <!-- Active URL -->
+              <div class="wan-url-box hidden" id="wanUrlBox">
+                <div class="st-inner-sep"></div>
+                <div class="st-url-row">
+                  <svg viewBox="0 0 24 24" width="14" height="14" style="flex-shrink:0;color:var(--accent)"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  <span class="st-url-val" id="wanUrlVal"></span>
+                  <button class="st-mini-btn" id="wanCopyBtn">Copy</button>
+                </div>
+                <button class="st-mini-btn" id="wanQrBtn" style="margin-top:8px">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Show QR Code
+                </button>
+                <div class="lan-qr-collapse hidden" id="wanQrCollapse">
+                  <div class="st-qr-wrap" style="margin-top:10px">
+                    <img id="wanQrImg" class="st-qr-img" alt="WAN QR" />
+                    <div class="st-qr-label">Scan to access from anywhere</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="st-inner-sep"></div>
+              <div class="st-row-btns">
+                <button class="st-action-btn" id="wanStartBtn">
+                  <svg viewBox="0 0 24 24" width="14" height="14"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></svg>
+                  Start Tunnel
+                </button>
+                <button class="st-action-btn st-action-danger hidden" id="wanStopBtn">
+                  <svg viewBox="0 0 24 24" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor" stroke="none"/></svg>
+                  Stop Tunnel
+                </button>
+                <button class="st-icon-btn" id="wanRefreshBtn" title="Refresh">
+                  <svg viewBox="0 0 24 24" width="15" height="15" id="wanRefreshIcon" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Cloud Storage -->
+            <div class="st-group-label">Cloud Storage</div>
+            <div class="st-group" id="cloudSettingsGroup">
+              <div class="st-row">
+                <div class="st-ri" style="background:linear-gradient(135deg,#4285f4,#34a853,#fbbc05,#ea4335);border-radius:10px;">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15a4 4 0 0 0 4 4h9a5 5 0 1 0-.1-9.999 5.002 5.002 0 0 0-9.78 2.096A4 4 0 0 0 3 15z"/></svg>
+                </div>
+                <div class="st-row-left">
+                  <span class="st-row-label">Connected Accounts</span>
+                  <span class="st-row-sub">Manage your Google Drive, Dropbox, OneDrive, and MEGA connections. Credentials are stored encrypted on your local server.</span>
+                </div>
+              </div>
+              <div class="st-inner-sep"></div>
+              <div id="cloudSettingsAccountsList">
+                <div class="loader-wrap" style="padding:10px 0"><div class="loader"></div></div>
+              </div>
+              <div class="st-inner-sep" id="cloudSettingsSep" style="display:none"></div>
+              <div style="padding:4px 0 2px">
+                <div class="st-group-label" style="margin:0 0 6px;font-size:11px">Device Name (for sharing)</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input type="text" class="st-input" id="cloudDeviceNameInput" placeholder="e.g. Dad's Phone" style="flex:1;font-size:13px" />
+                  <button class="st-mini-btn" id="cloudDeviceNameSaveBtn">Save</button>
+                </div>
+              </div>
+              <div class="st-inner-sep"></div>
+              <button class="st-action-btn" id="cloudSettingsAddBtn">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Cloud Account
+              </button>
+            </div>
+
+            <!-- Updates -->
+            <div class="st-group-label">Updates</div>
+            <div class="st-group">
+              <div class="st-row">
+                <div class="st-ri st-ri-teal">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                </div>
+                <div class="st-row-left">
+                  <span class="st-row-label">Current Version</span>
+                  <span class="st-row-sub" id="updateVerSub">v1.0.0 installed — tap Check to see if a newer release is available.</span>
+                </div>
+                <button class="st-mini-btn" id="updateCheckBtn">
+                  <svg viewBox="0 0 24 24" width="12" height="12" id="updateCheckIcon" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                  Check
+                </button>
+              </div>
+              <div class="update-badge hidden" id="updateBadge"></div>
+              <div class="update-changelog hidden" id="updateChangelog"></div>
+              <div class="hidden" id="updateDlWrap">
+                <div class="st-inner-sep"></div>
+                <a class="st-action-btn" id="updateDlBtn" target="_blank" rel="noopener" style="text-decoration:none;justify-content:center">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  View Release on GitHub
+                </a>
+              </div>
+            </div>
+
+            <!-- System Info -->
+            <div class="st-group-label">System</div>
+            <div class="st-group" id="systemInfoGroup">
+              <div class="st-row">
+                <div class="st-ri st-ri-orange">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <div class="st-row-left">
+                  <span class="st-row-label">Device Info</span>
+                  <span class="st-row-sub">Runtime details about your device, environment, server path, and platform.</span>
+                </div>
+              </div>
+              <div class="st-inner-sep"></div>
+              <div class="info-body st-sysinfo" id="infoBody"></div>
+            </div>
+
+            <!-- TWH Credit Footer in Settings -->
+            <a href="/creator/" class="st-twh-footer">
+              <img src="/twh-logo.png" alt="TWH" class="st-twh-logo"/>
+              <div class="st-twh-info">
+                <div class="st-twh-name">Technical White Hat</div>
+                <div class="st-twh-sub">Hevi Explorer — Built by TWH</div>
+              </div>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+            </a>
+
+            <div style="height:24px"></div>
+          </div>
+        </div>
+
+        <!-- ── ABOUT PAGE (slides in from right) ── -->
+        <div class="st-page st-subpage hidden" id="stAboutPage">
+          <div class="st-header">
+            <button class="st-back-btn" id="aboutPageBack">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+            </button>
+            <span class="st-header-title">About</span>
+            <div style="width:36px"></div>
+          </div>
+          <div class="st-body ab-body">
+
+            <div class="ab-ambient" aria-hidden="true"><span class="ab-orb ab-orb-one"></span><span class="ab-orb ab-orb-two"></span><span class="ab-orb ab-orb-three"></span></div>
+
+            <!-- HERO -->
+            <section class="ab-hero ab-reveal">
+              <div class="ab-hero-ring" aria-hidden="true"></div>
+              <div class="ab-hero-icon"><img src="/brand.svg" alt="Hevi Explorer logo" /></div>
+              <div class="ab-kicker">Private Media Vault</div>
+              <h1 class="ab-hero-name">Hevi Explorer</h1>
+              <p class="ab-hero-tagline">A self-hosted, local-first file manager and media vault — built for blazing-fast transfers, complete privacy, and total control over your own files. No cloud. No limits. No compromise.</p>
+              <div class="ab-hero-badges">
+                <span class="ab-badge ab-badge-green">Local-first</span>
+                <span class="ab-badge ab-badge-blue">No cloud dependency</span>
+                <span class="ab-badge ab-badge-red">No file size limit</span>
+                <span class="ab-badge ab-badge-purple" id="abVersion">v1.0.0</span>
+              </div>
+              <div class="ab-hero-metrics">
+                <div><strong>0</strong><span>mandatory accounts</span></div>
+                <div><strong>LAN</strong><span>full-speed transfer</span></div>
+                <div><strong>100%</strong><span>device controlled</span></div>
+                <div><strong>22</strong><span>days to build</span></div>
+              </div>
+            </section>
+
+            <!-- 01 WHAT IS IT -->
+            <section class="ab-section ab-reveal">
+              <div class="ab-section-head">
+                <span class="ab-section-icon">01</span>
+                <div>
+                  <div class="ab-section-title">What is Hevi Explorer?</div>
+                  <p class="ab-section-sub">Your device becomes a private media server you can open in any browser.</p>
+                </div>
+              </div>
+              <p class="ab-para">Hevi Explorer is a self-hosted file manager and media vault that runs entirely on your own machine using Node.js and Express. It turns your device — phone, laptop, PC, or server — into a local web server that you access from any browser on the same network.</p>
+              <p class="ab-para">Instead of uploading your personal files to a third-party cloud service, everything stays exactly where it already is. You browse your folders, stream your videos, play your music, view your images, open your documents, and transfer files across devices — all through a clean, modern web interface that feels like a premium app.</p>
+              <p class="ab-para">There are no account requirements, no subscriptions, no bandwidth limits, and no data ever leaves your device unless you explicitly create an optional remote tunnel. The vault is yours, the files are yours, and the server is yours.</p>
+            </section>
+
+            <!-- 02 ORIGIN STORY -->
+            <section class="ab-section ab-story-section ab-reveal">
+              <div class="ab-section-head">
+                <span class="ab-section-icon">02</span>
+                <div>
+                  <div class="ab-section-title">Origin Story</div>
+                  <p class="ab-section-sub">Built from a real frustration — a 4 GB file, a time limit, and no reliable tool to move it.</p>
+                </div>
+              </div>
+              <div class="ab-story-box">
+                <div class="ab-story-quote">"</div>
+                <p class="ab-para">One day I had a 4 GB important and private file on my phone that I needed to transfer to my PC — fast. The clock was ticking. I opened WhatsApp first: 2 GB file size limit. Blocked. I tried Telegram next: also a 2 GB limit, and even within that limit the transfer speed was painfully slow. On top of that, both platforms route your file through their servers, which felt wrong for something that was genuinely private.</p>
+                <p class="ab-para">I had no good option. No tool that was truly local, truly unlimited, and truly fast. So instead of compromising, I built one myself.</p>
+                <p class="ab-para">Hevi Explorer was born from that exact frustration. No artificial file-size cap. No uploading to someone else's server. No waiting for slow cloud infrastructure. Just your device, your local Wi-Fi network, your browser, and the fastest transfer path that physically exists — a direct connection between two devices on the same network.</p>
+                <p class="ab-para ab-story-highlight">What started as a personal tool to solve one problem became a full-featured private media vault used on Android, Linux, Windows, and macOS.</p>
+              </div>
+            </section>
+
+            <!-- 03 CORE FEATURES -->
+            <section class="ab-section ab-reveal">
+              <div class="ab-section-head">
+                <span class="ab-section-icon">03</span>
+                <div>
+                  <div class="ab-section-title">Core Features</div>
+                  <p class="ab-section-sub">Every tool you need to explore, preview, protect, and move your files — all in one place.</p>
+                </div>
+              </div>
+              <div class="ab-features">
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-teal">✊</span><div><b>AeroGrab — Gesture-Powered File Transfer</b><span>A first-of-its-kind way to send files between devices using just your hand. Open a file, make a fist (✊) for ~1 second to "grab" it, then on the receiving device show an open palm (✋) to "catch" it. Built on real on-device hand AI (MediaPipe Tasks Vision), end-to-end peer-to-peer over WebRTC — files never touch a server. Designed and built from scratch by Afsar Ali (TWH) — exclusive to Hevi Explorer.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-green">📡</span><div><b>Hevi Network — Auto Device Discovery</b><span>Every Hevi device on the same Wi-Fi or hotspot finds every other Hevi device automatically — no scanning, no pairing, no IP typing. The sidebar's Hevi Network panel lists all nearby devices live, with name and avatar, so you can target any one of them and send instantly. Works hand-in-hand with AeroGrab and the standard transfer flow.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-purple">📲</span><div><b>Install as a Real App (PWA)</b><span>Hevi Explorer is a Progressive Web App — install it directly from the browser onto Android, iOS, Windows, macOS, Linux, or ChromeOS. Once installed it opens in its own window, lives on your home screen or app drawer, works offline for the UI shell, and behaves like a native app — no Play Store, no App Store, no installer.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-blue">📁</span><div><b>Full File Manager</b><span>Browse folders, create new directories, rename files and folders, copy, move, and delete — everything from one clean interface with no installation required on client devices.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-blue">☁️</span><div><b>Cloud Storage Integration</b><span>Connect Google Drive, Dropbox, OneDrive, and MEGA accounts directly inside Hevi Explorer. Browse cloud files in the same grid layout as local files, stream cloud videos and images without downloading, and access connected accounts instantly from the sidebar or home screen. Multiple accounts from different providers can be connected at the same time. Shared accounts let other devices on your vault browse the same cloud storage.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-purple">🎬</span><div><b>Video Streaming</b><span>Stream MP4, MKV, AVI, MOV, WebM, and many other formats directly in the browser. Custom-built player with gesture support, speed control, volume overlay, sleep timer, and fullscreen mode.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-teal">🎵</span><div><b>Music Player</b><span>Play MP3, FLAC, WAV, AAC, M4A, and other audio formats. Premium player with album art extracted from file metadata, playlist support, queue management, and background playback.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-orange">🖼️</span><div><b>Image Viewer</b><span>View JPEG, PNG, WebP, GIF, AVIF, HEIC, RAW, and more. EXIF metadata extraction, pinch-to-zoom, swipe navigation, and HEIC-to-WebP conversion on the client side — no server processing needed.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-blue">📄</span><div><b>Document Viewer</b><span>Open PDF files with the built-in PDF.js viewer, and preview plain text, code files, markdown, JSON, XML, and other text formats directly inside the app without downloading.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-red">🗜️</span><div><b>Archive Inspector</b><span>Peek inside ZIP archives and view their contents without extracting everything. List, preview, and extract individual files from compressed archives on demand.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-teal">📤</span><div><b>Unlimited File Transfer</b><span>Move files of any size across devices through your local network with no limits, no compression, and no cloud involvement. Transfer an entire hard drive if you want — there is no cap.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-green">🌐</span><div><b>LAN Access</b><span>Any phone, tablet, or computer on the same Wi-Fi network opens the vault instantly. No app installation needed on the client device — just a browser and the local IP or QR code.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-orange">🔗</span><div><b>WAN Remote Access via Cloudflare Tunnel</b><span>When you need to reach your files from outside your home network, an encrypted HTTPS public link is created through Cloudflare Tunnel. No router port forwarding. Stop the tunnel any time to revoke access.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-red">🔒</span><div><b>Password Lock</b><span>Set a custom access password so anyone who opens the vault URL must authenticate before browsing or downloading. Useful when the vault is on a shared or public network.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-purple">🌙</span><div><b>Dark / Light Theme</b><span>Switch between a premium dark mode and a clean light mode. Your preference is saved locally and applied automatically every time you open the app.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-teal">📷</span><div><b>QR Code Connection</b><span>A QR code is automatically generated for your local IP address. Scan it from any phone or tablet to connect to the vault instantly without typing long addresses.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-purple">👤</span><div><b>Per-Device Profiles</b><span>Every device that opens Hevi Explorer gets its own private profile — automatically, with no login required. Recent files, favorites, pinned folders, theme, sort order, and playback preferences are all saved separately per device. Ten phones on the same network each see only their own history and settings. Works for LAN and WAN (Cloudflare Tunnel) devices alike.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-orange">⭐</span><div><b>Favorites</b><span>Mark any file, folder, or audio track as a favorite using the ⋮ context menu or the ★ button inside the music player. Favorited items show a gold star badge on their card. View all your favorites from the home screen, open them directly, or remove them one by one — all from the ⭐ Favorites section. Each device has its own independent favorites list.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-teal">📌</span><div><b>Active Folders — Pin &amp; Manage</b><span>Customize the "Active Folders" section on your home screen with folders that matter to you. Tap <b>Manage</b> to open the folder manager where you can rename a folder's display label (alias), remove pinned folders, or browse your storage to pin a new one. You can also long-press or tap ⋮ on any folder while browsing and choose "Pin to Active Folders" to add it instantly. When no folders are pinned, Active Folders automatically shows root-level folders as a smart fallback. Each device keeps its own pinned list.</span></div></div>
+              </div>
+            </section>
+
+            <!-- 04 HOW IT WORKS -->
+            <section class="ab-section ab-reveal">
+              <div class="ab-section-head">
+                <span class="ab-section-icon">04</span>
+                <div>
+                  <div class="ab-section-title">How It Works</div>
+                  <p class="ab-section-sub">A simple but powerful local pipeline — with optional secure internet access when you need it.</p>
+                </div>
+              </div>
+              <div class="ab-flow">
+                <div class="ab-flow-step">
+                  <div class="ab-flow-num">1</div>
+                  <div><b>Start the local server</b><span>Running <code class="ab-code">node server.js</code> on your device starts a lightweight Express HTTP server. It automatically detects your environment (Termux, Linux, Windows, Replit) and sets the root directory accordingly. It also scans for a free port starting at 5000.</span></div>
+                </div>
+                <div class="ab-flow-step">
+                  <div class="ab-flow-num">2</div>
+                  <div><b>File index is built in the background</b><span>As soon as the server starts, it begins indexing your root folder in the background. The index is saved to disk so future startups are instant. A file watcher monitors for changes in real time and keeps the index updated automatically.</span></div>
+                </div>
+                <div class="ab-flow-step">
+                  <div class="ab-flow-num">3</div>
+                  <div><b>Open the browser interface</b><span>Navigate to the displayed local URL in any browser. The vanilla JavaScript frontend loads instantly and communicates with the server's REST API endpoints to display your files, folders, and media in a clean, app-like interface.</span></div>
+                </div>
+                <div class="ab-flow-step">
+                  <div class="ab-flow-num">4</div>
+                  <div><b>Files stream directly from your storage</b><span>When you open a video, image, audio, or document, the server streams it directly from your storage to your browser. Videos support range requests for seeking. Large files are streamed in chunks and never need to be fully loaded into memory.</span></div>
+                </div>
+                <div class="ab-flow-step">
+                  <div class="ab-flow-num">5</div>
+                  <div><b>Connect other devices on the same network</b><span>Any device on the same Wi-Fi or hotspot accesses the vault by opening the local IP address shown in the console, or by scanning the QR code. This enables full-speed LAN transfers between any two devices with no app needed.</span></div>
+                </div>
+                <div class="ab-flow-step">
+                  <div class="ab-flow-num">6</div>
+                  <div><b>Use WAN tunnel only when you need remote access</b><span>If you need to reach your files from a different network, the built-in Cloudflare Tunnel integration creates a temporary encrypted HTTPS public link in seconds. Stop the tunnel at any time to immediately cut off outside access. No router configuration needed.</span></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 05 DATA SAFETY -->
+            <section class="ab-section ab-safety-section ab-reveal">
+              <div class="ab-section-head">
+                <span class="ab-section-icon">05</span>
+                <div>
+                  <div class="ab-section-title">Data Safety &amp; Privacy</div>
+                  <p class="ab-section-sub">Your files never leave your device. Here is exactly what we collect and what we do not.</p>
+                </div>
+              </div>
+              <div class="ab-safety-hero">
+                <div class="ab-safety-hero-icon">
+                  <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div>
+                  <div class="ab-safety-hero-title">100% Local — Your files never leave your device</div>
+                  <div class="ab-safety-hero-sub">Every file you browse, stream, or transfer stays entirely on the device running the server. Nothing is ever uploaded to any external server by Hevi Explorer itself.</div>
+                </div>
+              </div>
+
+              <div class="ab-sc-group">
+                <div class="ab-sc-label">What we do NOT do</div>
+                <div class="ab-sc-card ab-sc-red">
+                  <div class="ab-sc-icon-wrap ab-sc-icon-red">🚫</div>
+                  <div class="ab-sc-content">
+                    <strong>We do NOT collect your files</strong>
+                    <p>Your photos, videos, documents, and any other files you browse or stream through Hevi Explorer are never uploaded, copied, or sent anywhere. They stay on your device at all times.</p>
+                  </div>
+                </div>
+                <div class="ab-sc-card ab-sc-red">
+                  <div class="ab-sc-icon-wrap ab-sc-icon-red">🔐</div>
+                  <div class="ab-sc-content">
+                    <strong>We do NOT require an account</strong>
+                    <p>There is no sign-up, no login service, no email address, and no user profile of any kind. You run the app, you use it — that is all.</p>
+                  </div>
+                </div>
+                <div class="ab-sc-card ab-sc-red">
+                  <div class="ab-sc-icon-wrap ab-sc-icon-red">☁️</div>
+                  <div class="ab-sc-content">
+                    <strong>We do NOT sync to the cloud</strong>
+                    <p>Hevi Explorer is fully local. There is no automatic cloud backup, no sync service, and no third-party storage integration. Your files never leave your device unless you explicitly choose to create a WAN tunnel.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ab-sc-group">
+                <div class="ab-sc-label">What we may collect</div>
+                <div class="ab-sc-card ab-sc-yellow">
+                  <div class="ab-sc-icon-wrap ab-sc-icon-yellow">📊</div>
+                  <div class="ab-sc-content">
+                    <strong>Minimal anonymous analytics only</strong>
+                    <p>We may collect very small anonymous data: total download count, total user count, and device/platform type (e.g., "Android" or "Windows") — purely to understand which devices have issues and improve compatibility. No file names, no file contents, and no personal information is ever collected.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ab-sc-group">
+                <div class="ab-sc-label">What you control</div>
+                <div class="ab-sc-card ab-sc-green">
+                  <div class="ab-sc-icon-wrap ab-sc-icon-green">🛡️</div>
+                  <div class="ab-sc-content">
+                    <strong>You control who can access the vault</strong>
+                    <p>By default the vault is only accessible on your local network. You can optionally add a password lock, or create a temporary WAN tunnel link that you can stop at any time. You are always in full control of who can access your files.</p>
+                  </div>
+                </div>
+                <div class="ab-sc-card ab-sc-green">
+                  <div class="ab-sc-icon-wrap ab-sc-icon-green">🔗</div>
+                  <div class="ab-sc-content">
+                    <strong>WAN tunnel is opt-in and temporary</strong>
+                    <p>Cloudflare Tunnel is only activated when you tap "Start Tunnel" in settings. It creates a temporary public HTTPS URL. Stop it at any time to immediately remove outside access. The tunnel does not persist between server restarts.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 06 CLOUD STORAGE -->
+            <section class="ab-section ab-cloud-section ab-reveal">
+              <div class="ab-section-head">
+                <span class="ab-section-icon">06</span>
+                <div>
+                  <div class="ab-section-title">Cloud Storage Integration</div>
+                  <p class="ab-section-sub">Connect Google Drive, Dropbox, OneDrive, and MEGA — all inside Hevi Explorer. Your accounts, your data, zero compromise.</p>
+                </div>
+              </div>
+
+              <!-- What providers -->
+              <div class="ab-cloud-providers">
+                <div class="ab-cloud-prov ab-cp-google"><span>🔵</span><b>Google Drive</b></div>
+                <div class="ab-cloud-prov ab-cp-dropbox"><span>🟦</span><b>Dropbox</b></div>
+                <div class="ab-cloud-prov ab-cp-onedrive"><span>🟦</span><b>OneDrive</b></div>
+                <div class="ab-cloud-prov ab-cp-mega"><span>🔴</span><b>MEGA</b></div>
+              </div>
+
+              <p class="ab-para">Hevi Explorer is the only local-first file manager that seamlessly integrates four major cloud storage providers — Google Drive, Dropbox, OneDrive, and MEGA — directly into the same interface you use for your local files. No switching apps, no separate tabs. Your cloud files appear in the same clean grid layout as your device files. You browse, stream, and manage everything from one place.</p>
+
+              <!-- Why it's safe -->
+              <div class="ab-cloud-safety-block">
+                <div class="ab-cloud-safety-title">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  Why Cloud Storage in Hevi Explorer is 100% Safe
+                </div>
+                <div class="ab-cloud-safety-points">
+                  <div class="ab-csp">
+                    <span class="ab-csp-icon">🔐</span>
+                    <div>
+                      <b>Your credentials never leave your device</b>
+                      <p>OAuth tokens and API keys for Google Drive, Dropbox, OneDrive, and MEGA are stored locally in encrypted form on the device running the server — inside <code class="ab-code">data/profiles/</code>. They are encrypted using a randomly generated server secret key unique to your installation. No credential is ever sent to any Hevi server — because there is no Hevi server.</p>
+                    </div>
+                  </div>
+                  <div class="ab-csp">
+                    <span class="ab-csp-icon">🛡️</span>
+                    <div>
+                      <b>Files flow directly through your own account — not through us</b>
+                      <p>When you browse or stream a cloud file, Hevi Explorer makes the API request directly to Google, Dropbox, Microsoft, or MEGA using your own OAuth token. Your data travels from the cloud provider's servers to your browser. No third party ever touches your files.</p>
+                    </div>
+                  </div>
+                  <div class="ab-csp">
+                    <span class="ab-csp-icon">🔑</span>
+                    <div>
+                      <b>OAuth-based login — no password ever stored</b>
+                      <p>For Google Drive, Dropbox, and OneDrive, authentication uses the official OAuth 2.0 flow. You log in directly on the provider's own website. Hevi Explorer only receives a time-limited access token — your password is never seen or stored by the app.</p>
+                    </div>
+                  </div>
+                  <div class="ab-csp">
+                    <span class="ab-csp-icon">⚡</span>
+                    <div>
+                      <b>Token refresh is automatic and local</b>
+                      <p>Access tokens expire after a short time. Hevi Explorer automatically refreshes them in the background using your stored refresh token — entirely locally, without any intervention or external service from our side.</p>
+                    </div>
+                  </div>
+                  <div class="ab-csp">
+                    <span class="ab-csp-icon">🗑️</span>
+                    <div>
+                      <b>You can disconnect any account at any time</b>
+                      <p>Open Settings → Cloud Storage, tap the trash icon next to any connected account, and it is instantly removed. All stored tokens for that account are deleted from your device immediately. No traces remain.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- How to use it -->
+              <div class="ab-section-head" style="margin-top:28px; margin-bottom:0">
+                <div>
+                  <div class="ab-section-title" style="font-size:1.05rem">How to Connect Cloud Storage</div>
+                  <p class="ab-section-sub">Step-by-step — takes under 5 minutes for any provider.</p>
+                </div>
+              </div>
+              <div class="ab-flow" style="margin-top:14px">
+                <div class="ab-flow-step">
+                  <div class="ab-flow-num">1</div>
+                  <div><b>Open Settings</b><span>Tap the ⚙️ gear icon in the bottom navigation bar or sidebar to open the Settings panel.</span></div>
+                </div>
+                <div class="ab-flow-step">
+                  <div class="ab-flow-num">2</div>
+                  <div><b>Go to Cloud Storage</b><span>Inside Settings, scroll down and tap <em>Cloud Storage</em>. You will see tiles for Google Drive, Dropbox, OneDrive, and MEGA.</span></div>
+                </div>
+                <div class="ab-flow-step">
+                  <div class="ab-flow-num">3</div>
+                  <div><b>Tap "Connect" on your provider</b><span>Each provider has a <em>Connect</em> button. For Google Drive, Dropbox, and OneDrive — tapping Connect opens the official OAuth login page on that provider's website. For MEGA — you enter your MEGA email and password directly (MEGA uses its own end-to-end encrypted auth system).</span></div>
+                </div>
+                <div class="ab-flow-step">
+                  <div class="ab-flow-num">4</div>
+                  <div><b>Authorise access on the provider's page</b><span>Log in to your account on the provider's own website (Google, Microsoft, Dropbox). Grant the requested permissions. You are redirected back to Hevi Explorer automatically. Your token is saved encrypted on your device.</span></div>
+                </div>
+                <div class="ab-flow-step">
+                  <div class="ab-flow-num">5</div>
+                  <div><b>Access your cloud files</b><span>Your connected cloud account appears immediately in the sidebar and on the Home screen. Tap it to browse your cloud storage in the same grid view as local files. Stream videos and images directly without downloading. Open documents in the built-in viewers.</span></div>
+                </div>
+                <div class="ab-flow-step">
+                  <div class="ab-flow-num">6</div>
+                  <div><b>Share with other devices (optional)</b><span>Connected cloud accounts can be set to "Shared" mode. When shared, any device that opens your Hevi vault on the same network can browse and stream from that cloud account — no separate login needed on those devices.</span></div>
+                </div>
+              </div>
+
+              <!-- Features -->
+              <div class="ab-section-head" style="margin-top:28px; margin-bottom:0">
+                <div>
+                  <div class="ab-section-title" style="font-size:1.05rem">Cloud Storage Features</div>
+                  <p class="ab-section-sub">Everything you can do with your connected cloud accounts inside Hevi Explorer.</p>
+                </div>
+              </div>
+              <div class="ab-features" style="margin-top:14px">
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-blue">🗂️</span><div><b>Unified Browser View</b><span>Browse Google Drive, Dropbox, OneDrive, and MEGA files in the exact same grid/list layout as your local files. Folders, thumbnails, file sizes, and dates — all presented identically. No separate app needed.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-purple">🎬</span><div><b>Direct Cloud Video Streaming</b><span>Stream videos hosted on Google Drive, Dropbox, OneDrive, or MEGA directly in the Hevi built-in player. No need to download first. Seek, pause, and play just as you would with a local file.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-teal">🖼️</span><div><b>Cloud Image Viewing</b><span>Open images from any connected cloud account directly in the Hevi image viewer. Pinch-to-zoom, swipe navigation, and EXIF metadata — same experience as local images.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-orange">👥</span><div><b>Multiple Accounts, Multiple Providers</b><span>Connect more than one account at the same time. For example: two Google Drive accounts, one Dropbox, and one MEGA — all visible simultaneously from the sidebar. Each account is listed separately.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-green">🌐</span><div><b>Shared Cloud Access for All Devices</b><span>Mark any connected cloud account as "shared." Every device on your LAN vault (or WAN tunnel) can then browse that cloud storage without needing their own login. Useful for shared drives on a family or team network.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-red">🗑️</span><div><b>One-Tap Disconnect</b><span>Remove any connected account in one tap from Settings → Cloud Storage. All tokens are deleted instantly from your device. The account disappears from the sidebar immediately.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-blue">🔄</span><div><b>Automatic Token Refresh</b><span>Access tokens expire after a few hours. Hevi Explorer silently refreshes them in the background. You never need to log in again unless you manually disconnect the account.</span></div></div>
+                <div class="ab-feat"><span class="ab-feat-icon ab-fi-purple">📱</span><div><b>Works Across All Devices</b><span>Cloud files are accessible from every device that connects to your vault — phone, tablet, laptop — through the browser, without any additional app or login required on the client device.</span></div></div>
+              </div>
+
+              <!-- Why better than others -->
+              <div class="ab-cloud-compare">
+                <div class="ab-cloud-compare-title">Why Hevi's Cloud Integration is Different</div>
+                <div class="ab-cloud-compare-grid">
+                  <div class="ab-cc-item">
+                    <span class="ab-cc-icon">✅</span>
+                    <div><b>4 providers in one place</b><p>Most file managers support at most one cloud service. Hevi supports Google Drive, Dropbox, OneDrive, and MEGA simultaneously — in the same interface.</p></div>
+                  </div>
+                  <div class="ab-cc-item">
+                    <span class="ab-cc-icon">✅</span>
+                    <div><b>No middleman server</b><p>Unlike apps that route cloud traffic through their own servers, Hevi makes API calls directly from your device to your cloud provider. Your data never passes through any Hevi infrastructure.</p></div>
+                  </div>
+                  <div class="ab-cc-item">
+                    <span class="ab-cc-icon">✅</span>
+                    <div><b>Encrypted credential storage</b><p>Your tokens are stored encrypted on your own machine using a unique per-installation secret key. No cloud sync of credentials. No external storage of any kind.</p></div>
+                  </div>
+                  <div class="ab-cc-item">
+                    <span class="ab-cc-icon">✅</span>
+                    <div><b>Stream without downloading</b><p>Most tools force you to download cloud files before viewing. Hevi streams videos and images directly from the cloud API to your browser player — faster and with zero local storage used.</p></div>
+                  </div>
+                  <div class="ab-cc-item">
+                    <span class="ab-cc-icon">✅</span>
+                    <div><b>Multiple accounts per provider</b><p>Need access to two different Google Drive accounts or two MEGA accounts? Hevi supports connecting multiple accounts from the same provider at the same time — a feature most file managers completely lack.</p></div>
+                  </div>
+                  <div class="ab-cc-item">
+                    <span class="ab-cc-icon">✅</span>
+                    <div><b>Seamless LAN sharing</b><p>Shared cloud accounts extend to every device on your local network or WAN tunnel. One person authenticates; everyone on the vault benefits. No repeated logins across devices.</p></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 07 TECH STACK -->
+            <section class="ab-section ab-reveal">
+              <div class="ab-section-head">
+                <span class="ab-section-icon">07</span>
+                <div>
+                  <div class="ab-section-title">Tech Stack</div>
+                  <p class="ab-section-sub">Built with a lean, zero-bloat stack. No frontend framework. No unnecessary dependencies.</p>
+                </div>
+              </div>
+              <div class="ab-stack-group">
+                <div class="ab-stack-label">Backend — Server</div>
+                <div class="ab-tech-grid">
+                  <div class="ab-tech ab-tech-green"><span>⚙️</span><div><b>Node.js v18+</b><span>Runtime — file I/O, streaming, all server logic</span></div></div>
+                  <div class="ab-tech ab-tech-yellow"><span>🚀</span><div><b>Express.js v5</b><span>HTTP framework — routes, middleware, static serving</span></div></div>
+                  <div class="ab-tech ab-tech-blue"><span>🗜️</span><div><b>compression</b><span>Gzip/Brotli middleware — compresses API responses</span></div></div>
+                  <div class="ab-tech ab-tech-orange"><span>📦</span><div><b>adm-zip</b><span>ZIP archive reading — list and extract archive contents</span></div></div>
+                  <div class="ab-tech ab-tech-purple"><span>📸</span><div><b>exifr</b><span>Image metadata — reads EXIF data from photos</span></div></div>
+                  <div class="ab-tech ab-tech-teal"><span>🎵</span><div><b>music-metadata</b><span>Audio metadata — album art, track info, duration</span></div></div>
+                  <div class="ab-tech ab-tech-green"><span>📲</span><div><b>qrcode</b><span>QR generator — scannable codes for LAN/WAN URLs</span></div></div>
+                  <div class="ab-tech ab-tech-red"><span>🎬</span><div><b>FFmpeg</b><span>Optional — server-side video thumbnail generation</span></div></div>
+                  <div class="ab-tech ab-tech-blue"><span>🔗</span><div><b>Cloudflare Tunnel</b><span>Optional WAN — temporary encrypted public HTTPS links</span></div></div>
+                </div>
+              </div>
+              <div class="ab-stack-group">
+                <div class="ab-stack-label">Frontend — Client</div>
+                <div class="ab-tech-grid">
+                  <div class="ab-tech ab-tech-orange"><span>🌐</span><div><b>HTML5</b><span>Semantic markup — full UI structure</span></div></div>
+                  <div class="ab-tech ab-tech-blue"><span>🎨</span><div><b>CSS3</b><span>All styling — variables, animations, responsive layout</span></div></div>
+                  <div class="ab-tech ab-tech-yellow"><span>⚡</span><div><b>Vanilla JavaScript</b><span>Zero frameworks — pure JS handles all routing, rendering, and events</span></div></div>
+                  <div class="ab-tech ab-tech-purple"><span>✨</span><div><b>Anime.js</b><span>Animation library — smooth entrance effects and UI transitions</span></div></div>
+                  <div class="ab-tech ab-tech-red"><span>📄</span><div><b>PDF.js</b><span>Mozilla's PDF renderer — opens PDFs directly in the browser</span></div></div>
+                  <div class="ab-tech ab-tech-teal"><span>🖼️</span><div><b>heic2any</b><span>Client-side HEIC converter — converts Apple HEIC images to WebP</span></div></div>
+                  <div class="ab-tech ab-tech-green"><span>🎬</span><div><b>Canvas API</b><span>Browser built-in — video thumbnails without server load</span></div></div>
+                  <div class="ab-tech ab-tech-blue"><span>📡</span><div><b>Service Worker</b><span>PWA support — offline caching and installable app behaviour</span></div></div>
+                  <div class="ab-tech ab-tech-orange"><span>👁️</span><div><b>IntersectionObserver</b><span>Browser API — infinite scroll and lazy image loading</span></div></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 08 BUILD JOURNEY -->
+            <section class="ab-section ab-reveal">
+              <div class="ab-section-head">
+                <span class="ab-section-icon">08</span>
+                <div>
+                  <div class="ab-section-title">Build Journey</div>
+                  <p class="ab-section-sub">22 days. One developer. One real problem. Built with experience, planning, and a lot of iteration.</p>
+                </div>
+              </div>
+              <div class="ab-journey">
+                <div class="ab-journey-stat"><div class="ab-journey-num">22</div><div class="ab-journey-label">Days to build</div></div>
+                <div class="ab-journey-stat"><div class="ab-journey-num">4+</div><div class="ab-journey-label">AI tools used</div></div>
+                <div class="ab-journey-stat"><div class="ab-journey-num">1</div><div class="ab-journey-label">Developer</div></div>
+                <div class="ab-journey-stat"><div class="ab-journey-num">0</div><div class="ab-journey-label">Frameworks used</div></div>
+              </div>
+              <p class="ab-para">Hevi Explorer was designed, built, and tested by a single developer over 22 days. The process involved system architecture planning, writing a custom file indexing engine, building a media streaming backend, and designing the entire frontend from scratch without any UI framework.</p>
+              <p class="ab-para">AI tools — including Gemini, ChatGPT, GPT-4, and Replit AI — were used for acceleration, research, and debugging assistance. However, all decisions about product direction, architecture, feature design, and final implementation were driven by the creator's own development experience and judgment.</p>
+              <p class="ab-para">Every component you see — the video player, audio player, image viewer, file manager, archive inspector, settings system, LAN QR generator, WAN tunnel integration, and file index engine — was hand-coded and iteratively improved based on real usage and testing.</p>
+            </section>
+
+            <!-- 09 PLATFORMS -->
+            <section class="ab-section ab-reveal">
+              <div class="ab-section-head">
+                <span class="ab-section-icon">09</span>
+                <div>
+                  <div class="ab-section-title">Supported Platforms</div>
+                  <p class="ab-section-sub">Any environment that can run Node.js and access storage can be a vault host.</p>
+                </div>
+              </div>
+              <div class="ab-plats">
+                <div class="ab-plat">🤖 Android — Termux</div>
+                <div class="ab-plat">🐉 Kali Linux</div>
+                <div class="ab-plat">🐧 Ubuntu / Debian</div>
+                <div class="ab-plat">🐧 Any Linux distro</div>
+                <div class="ab-plat">🍎 macOS</div>
+                <div class="ab-plat">🪟 Windows 10 / 11</div>
+                <div class="ab-plat">☁️ Replit</div>
+                <div class="ab-plat">🖥️ Any server with Node.js</div>
+              </div>
+              <p class="ab-para" style="margin-top:14px">The server automatically detects your environment on startup — Termux on Android, standard Linux, Replit, or a desktop OS — and sets the correct root directory and path conventions. No manual configuration needed for most setups.</p>
+            </section>
+
+            <!-- 10 CREATOR -->
+            <section class="ab-section ab-creator-section ab-reveal">
+              <div class="ab-section-head">
+                <span class="ab-section-icon">10</span>
+                <div>
+                  <div class="ab-section-title">About the Creator</div>
+                  <p class="ab-section-sub">Afsar Ali — developer, cybersecurity educator, and founder of Technical White Hat.</p>
+                </div>
+              </div>
+              <div class="ab-creator">
+                <div class="ab-creator-avatar">AA</div>
+                <div class="ab-creator-info">
+                  <div class="ab-creator-name">Afsar Ali</div>
+                  <div class="ab-creator-role">Developer &middot; Cybersecurity Educator &middot; Founder of TWH</div>
+                  <div class="ab-creator-location">Kolkata, India &nbsp;&middot;&nbsp; 21 years old</div>
+                </div>
+              </div>
+              <p class="ab-para">Afsar Ali is a 21-year-old self-taught developer and cybersecurity educator from Kolkata, India. A proud dropout who chose real-world skill building over a traditional academic path, Afsar has spent years deep in the world of ethical hacking, Linux systems, network security, OSINT, Python automation, and practical tech education.</p>
+              <p class="ab-para">He is the founder and sole architect of Technical White Hat (TWH) — a cybersecurity education initiative and community that has grown to thousands of active members across YouTube and Telegram. TWH produces practical, real-world tutorials on ethical hacking, custom security tools, scripting, and digital defense.</p>
+              <p class="ab-para">Hevi Explorer is a direct product of that mindset: build the tool you need, make it private, make it fast, and make it work on any device you actually use. No bloat, no unnecessary complexity, no dependency on anyone else's infrastructure.</p>
+              <p class="ab-para"><b>AeroGrab</b>, the gesture-based file transfer system inside Hevi Explorer, was also designed and built from scratch by Afsar — combining on-device hand AI, peer-to-peer WebRTC, and a custom signaling layer into a single one-handed flow. The same hands that build TWH's security tutorials also built the very first hand-gesture file transfer in Hevi.</p>
+            </section>
+
+            <!-- 11 TWH -->
+            <section class="ab-section ab-twh-section ab-reveal">
+              <div class="ab-twh-header">
+                <div class="ab-twh-logo-wrap">
+                  <img src="/twh-logo.png" alt="Technical White Hat logo" />
+                </div>
+                <div>
+                  <div class="ab-twh-name">Technical White Hat</div>
+                  <div class="ab-twh-tagline">Decoding Tech. Empowering Minds. Securing the Future.</div>
+                </div>
+              </div>
+              <p class="ab-para">Technical White Hat is more than a channel — it is a movement. Founded and operated by Afsar Ali, TWH has had one primary mission since day one: to decode the complexities of cyberspace and bring elite cybersecurity knowledge, ethical hacking skills, and cutting-edge tech education to everyone — not just professionals.</p>
+              <div class="ab-twh-pillars">
+                <div class="ab-twh-pillar">
+                  <div class="ab-twh-pillar-icon">🛡️</div>
+                  <div><b>Ethical Hacking &amp; Cybersecurity</b><span>From absolute basics to advanced network defense. Complex digital threats and vulnerabilities broken down into practical, real-world tutorials anyone can follow and apply.</span></div>
+                </div>
+                <div class="ab-twh-pillar">
+                  <div class="ab-twh-pillar-icon">🔭</div>
+                  <div><b>Custom OSINT &amp; Security Tools</b><span>TWH does not just use tools — it builds them. Custom-engineered software like the TWH OSINT framework, designed for precision, speed, and next-level digital intelligence gathering.</span></div>
+                </div>
+                <div class="ab-twh-pillar">
+                  <div class="ab-twh-pillar-icon">⚡</div>
+                  <div><b>Coding &amp; Automation</b><span>Python scripting, JavaScript, API integrations, and AI-assisted development. If a system is slow or manual, TWH writes the code to automate it and teaches you how to do the same.</span></div>
+                </div>
+              </div>
+              <div class="ab-twh-tags">
+                <span class="ab-twh-tag">Ethical Hacking</span>
+                <span class="ab-twh-tag">Cybersecurity</span>
+                <span class="ab-twh-tag">OSINT</span>
+                <span class="ab-twh-tag">Python</span>
+                <span class="ab-twh-tag">Linux</span>
+                <span class="ab-twh-tag">Automation</span>
+                <span class="ab-twh-tag">Bug Bounty</span>
+                <span class="ab-twh-tag">Network Security</span>
+              </div>
+              <div class="ab-twh-socials">
+                <a href="https://www.youtube.com/@technicalwhitehat" target="_blank" rel="noopener" class="ab-twh-social ab-twh-yt">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.75 15.5V8.5l6.5 3.5-6.5 3.5z"/></svg>
+                  <div><b>YouTube</b><span>@technicalwhitehat</span></div>
+                </a>
+                <a href="https://instagram.com/technicalwhitehat" target="_blank" rel="noopener" class="ab-twh-social ab-twh-ig">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+                  <div><b>Instagram</b><span>@technicalwhitehat</span></div>
+                </a>
+                <a href="https://t.me/technicalwhitehat" target="_blank" rel="noopener" class="ab-twh-social ab-twh-tg">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                  <div><b>Telegram</b><span>t.me/technicalwhitehat</span></div>
+                </a>
+              </div>
+            </section>
+
+            <div style="height:40px"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── CONTEXT MENU ── -->
+    <div class="ctx-menu hidden" id="ctxMenu">
+      <button class="ctx-item" id="ctxSelect">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><polyline points="7 7 9 9 13 5"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Select
+      </button>
+      <button class="ctx-item" id="ctxOpen">
+        <svg viewBox="0 0 24 24">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+        Open
+      </button>
+      <button class="ctx-item" id="ctxDownload">
+        <svg viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        Download
+      </button>
+      <button class="ctx-item" id="ctxFavorite">
+        <span class="ctx-fav-star" style="font-size:16px;width:16px;text-align:center">☆</span>
+        <span class="ctx-fav-label">Favorite</span>
+      </button>
+      <button class="ctx-item" id="ctxPin" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/>
+        </svg>
+        <span id="ctxPinLabel">Pin to Active Folders</span>
+      </button>
+      <div class="ctx-divider"></div>
+      <button class="ctx-item" id="ctxRename">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Rename
+      </button>
+      <button class="ctx-item" id="ctxCopy">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        Copy
+      </button>
+      <button class="ctx-item" id="ctxMove">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="5 9 2 12 5 15"/>
+          <polyline points="9 5 12 2 15 5"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <line x1="12" y1="2" x2="12" y2="22"/>
+        </svg>
+        Move
+      </button>
+      <button class="ctx-item" id="ctxInfo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="8"/>
+          <line x1="12" y1="12" x2="12" y2="16"/>
+        </svg>
+        Info
+      </button>
+      <button class="ctx-item ctx-aerograb" id="ctxAeroGrab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/>
+          <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/>
+          <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/>
+          <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+        </svg>
+        <span>AeroGrab</span>
+      </button>
+      <div class="ctx-divider"></div>
+      <button class="ctx-item ctx-danger" id="ctxDelete">
+        <svg viewBox="0 0 24 24">
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6l-1 14H6L5 6" />
+          <path d="M10 11v6M14 11v6" />
+          <path d="M9 6V4h6v2" />
+        </svg>
+        Delete
+      </button>
+    </div>
+
+    <!-- ── TOAST ── -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ── MANAGE ACTIVE FOLDERS MODAL ── -->
+    <div class="modal hidden" id="pinnedModal">
+      <div class="modal-backdrop" id="pinnedBackdrop"></div>
+      <div class="pinned-sheet">
+        <div class="pinned-sheet-header">
+          <span class="pinned-sheet-title">📌 Active Folders</span>
+          <button class="icon-btn" id="pinnedCloseBtn" title="Close">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="pinned-hint" id="pinnedHint">Pin any folder so it always appears here. Long-press or use ⋮ on any folder to pin it.</div>
+        <div class="pinned-list" id="pinnedList"></div>
+        <div class="pinned-actions">
+          <button class="pinned-add-btn" id="pinnedBrowseBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            Browse &amp; Pin a Folder
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ALIAS DIALOG ── -->
+    <div class="modal hidden" id="aliasModal">
+      <div class="modal-backdrop" id="aliasBackdrop"></div>
+      <div class="folder-dialog">
+        <h3>Rename Display Name</h3>
+        <input type="text" id="aliasInput" placeholder="Display name" autocomplete="off" />
+        <div class="dialog-actions">
+          <button class="btn-ghost" id="aliasCancelBtn">Cancel</button>
+          <button class="btn-primary" id="aliasConfirmBtn">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RENAME DIALOG ── -->
+    <div class="modal hidden" id="renameModal">
+      <div class="modal-backdrop" id="renameBackdrop"></div>
+      <div class="folder-dialog">
+        <h3>Rename</h3>
+        <input type="text" id="renameInput" placeholder="New name" autocomplete="off" />
+        <div class="dialog-actions">
+          <button class="btn-ghost" id="renameCancelBtn">Cancel</button>
+          <button class="btn-primary" id="renameConfirmBtn">Rename</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FOLDER PICKER MODAL (copy / move) ── -->
+    <div class="modal hidden" id="folderPickerModal">
+      <div class="modal-backdrop" id="folderPickerBackdrop"></div>
+      <div class="fp-dialog">
+        <div class="fp-header">
+          <button class="icon-btn fp-back-btn" id="fpBack" title="Go up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+          </button>
+          <span class="fp-title" id="fpTitle">Select destination</span>
+          <button class="icon-btn" id="fpClose">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="fp-breadcrumb" id="fpBreadcrumb">/ root</div>
+        <div class="fp-list" id="fpList">
+          <div class="loader-wrap"><div class="loader"></div></div>
+        </div>
+        <div class="fp-actions">
+          <button class="btn-ghost" id="fpCancelBtn">Cancel</button>
+          <button class="btn-primary" id="fpSelectBtn" style="flex:1">📋 Paste here</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FILE INFO DIALOG ── -->
+    <div class="modal hidden" id="fileInfoModal">
+      <div class="modal-backdrop" id="fileInfoBackdrop"></div>
+      <div class="folder-dialog" style="min-width:280px;max-width:360px">
+        <h3 id="fileInfoTitle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">File Info</h3>
+        <div id="fileInfoBody" style="font-size:13px;line-height:1.8;color:var(--text1)"></div>
+        <div class="dialog-actions" style="margin-top:14px">
+          <button class="btn-primary" id="fileInfoCloseBtn">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── NEW FOLDER DIALOG ── -->
+    <div class="modal hidden" id="folderModal">
+      <div class="modal-backdrop" id="folderBackdrop"></div>
+      <div class="folder-dialog">
+        <h3>New Folder</h3>
+        <input
+          type="text"
+          id="folderNameInput"
+          placeholder="Folder name"
+          autocomplete="off"
+        />
+        <div class="dialog-actions">
+          <button class="btn-ghost" id="folderCancelBtn">Cancel</button>
+          <button class="btn-primary" id="folderCreateBtn">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CLOUD PROVIDER PICKER MODAL ── -->
+    <div class="modal hidden" id="cloudPickerModal">
+      <div class="modal-backdrop" id="cloudPickerBackdrop"></div>
+      <div class="cloud-picker-wrap">
+        <div class="cloud-picker-header">
+          <span class="cloud-picker-title">Add Cloud Account</span>
+          <button class="icon-btn" id="cloudPickerClose"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+        </div>
+        <p class="cloud-picker-sub">Choose your cloud storage provider. You'll need to create free API credentials — the setup guide will walk you through it step by step.</p>
+        <div class="cloud-provider-grid">
+          <button class="cloud-provider-btn" data-provider="gdrive">
+            <svg viewBox="0 0 87.3 78" width="36" height="36" style="fill:none">
+              <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
+              <path d="M43.65 25L29.9 1.2C28.55 2 27.4 3.1 26.6 4.5L1.2 48.5A9.06 9.06 0 0 0 0 53h27.5z" fill="#00ac47"/>
+              <path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75L86.1 57.5c.8-1.4 1.2-2.95 1.2-4.5H59.7L73.55 76.8z" fill="#ea4335"/>
+              <path d="M43.65 25L57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/>
+              <path d="M59.7 53H87.3c0-1.55-.4-3.1-1.2-4.5L61.1 4.5C60.3 3.1 59.15 2 57.8 1.2L44.05 25z" fill="#2684fc"/>
+              <path d="M27.5 53L13.75 76.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.4 4.5-1.2L59.7 53z" fill="#ffba00"/>
+            </svg>
+            <span class="cloud-provider-name">Google Drive</span>
+            <span class="cloud-provider-sub">Via Google Cloud API</span>
+          </button>
+          <button class="cloud-provider-btn" data-provider="dropbox">
+            <svg viewBox="0 0 40 40" width="36" height="36">
+              <path d="M10 2L0 9l10 7 10-7zM30 2L20 9l10 7 10-7zM0 23l10 7 10-7-10-7zM30 16l-10 7 10 7 10-7zM20 24.5L10 31.5 20 38.5l10-7z" fill="#0061ff"/>
+            </svg>
+            <span class="cloud-provider-name">Dropbox</span>
+            <span class="cloud-provider-sub">Via Dropbox App API</span>
+          </button>
+          <button class="cloud-provider-btn" data-provider="onedrive">
+            <svg viewBox="0 0 96 48" width="40" height="22">
+              <path d="M32.3 38.6c-.3-1.4-.5-2.8-.5-4.3 0-10 8.1-18.1 18.1-18.1 4.8 0 9.1 1.9 12.4 4.9A15.2 15.2 0 0 1 74.6 19C81.5 19.6 87 25.4 87 32.5c0 .7-.1 1.4-.2 2.1H32.3z" fill="#0078d4"/>
+              <path d="M9.7 38.6a18 18 0 0 1 21-24.4A21.7 21.7 0 0 1 56 16.7a15.2 15.2 0 0 0-12.4 6.4 18.1 18.1 0 0 0-2.4-.2c-7.6 0-14 4.7-16.5 11.4A18 18 0 0 1 9.7 38.6z" fill="#28a8e0"/>
+            </svg>
+            <span class="cloud-provider-name">OneDrive</span>
+            <span class="cloud-provider-sub">Via Microsoft Azure</span>
+          </button>
+          <button class="cloud-provider-btn" data-provider="mega">
+            <svg viewBox="0 0 60 40" width="40" height="28">
+              <text x="2" y="34" font-family="Arial Black,sans-serif" font-size="38" font-weight="900" fill="#d9272e">M</text>
+            </svg>
+            <span class="cloud-provider-name">MEGA</span>
+            <span class="cloud-provider-sub">Email &amp; password</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CLOUD SETUP MODAL ── -->
+    <div class="modal hidden" id="cloudSetupModal">
+      <div class="modal-backdrop" id="cloudSetupBackdrop"></div>
+      <div class="cloud-setup-wrap">
+        <div class="cloud-setup-header">
+          <button class="st-back-btn" id="cloudSetupClose">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+          <span class="cloud-setup-title" id="cloudSetupTitle">Connect Cloud</span>
+          <div class="cloud-setup-steps" id="cloudSetupStepDots"></div>
+        </div>
+        <div class="cloud-setup-body" id="cloudSetupBody"></div>
+        <div class="cloud-setup-footer">
+          <button class="btn-ghost" id="cloudSetupBackBtn" style="display:none">← Back</button>
+          <button class="btn-primary" id="cloudSetupNextBtn">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CLOUD SHARE MODAL ── -->
+    <div class="modal hidden" id="cloudShareModal">
+      <div class="modal-backdrop" id="cloudShareBackdrop"></div>
+      <div class="folder-dialog" style="max-width:400px">
+        <h3 style="margin-bottom:12px">Share Account</h3>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Choose who can access this cloud account from other devices on this vault.</p>
+        <div class="cloud-share-options" id="cloudShareOptions">
+          <label class="cloud-share-opt"><span>🔒 Only me (private)</span><input type="radio" name="cloudShare" value="none"></label>
+          <label class="cloud-share-opt"><span>🌐 All devices on this vault</span><input type="radio" name="cloudShare" value="all"></label>
+          <label class="cloud-share-opt"><span>🎯 Select specific devices</span><input type="radio" name="cloudShare" value="select"></label>
+        </div>
+        <div class="cloud-share-device-list hidden" id="cloudShareDeviceList"></div>
+        <div class="dialog-actions" style="margin-top:18px">
+          <button class="btn-ghost" id="cloudShareCancelBtn">Cancel</button>
+          <button class="btn-primary" id="cloudShareSaveBtn">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+    </script>
+    <!-- Subscribe to TWH on YouTube (floating pill) -->
+    <a href="https://www.youtube.com/@technicalwhitehat?sub_confirmation=1"
+       target="_blank" rel="noopener noreferrer"
+       class="twh-watermark twh-watermark--yt"
+       title="Subscribe to Technical White Hat on YouTube">
+      <svg viewBox="0 0 24 24" class="twh-wm-yt-icon" fill="currentColor" aria-hidden="true">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+      </svg>
+      <strong>Subscribe</strong>
+    </a>
+
+    <!-- ── AEROGRAB: Camera Permission Dialog ── -->
+    <div class="modal hidden" id="aeroPermDialog">
+      <div class="modal-backdrop"></div>
+      <div class="ag-perm-card">
+        <div class="ag-perm-icon">🎯</div>
+        <div class="ag-perm-title">AeroGrab needs your camera</div>
+        <div class="ag-perm-body">
+          AeroGrab uses your camera to detect hand gestures<br>
+          <b>(fist to grab, open palm to catch)</b>.
+        </div>
+        <ul class="ag-perm-list">
+          <li>✅ Your camera feed <b>NEVER</b> leaves this device</li>
+          <li>✅ No video is recorded or stored</li>
+          <li>✅ No data is sent to any server</li>
+          <li>✅ Only gesture events are transmitted — never images</li>
+        </ul>
+        <div class="ag-perm-note">AeroGrab only works on your local network. Completely private.</div>
+        <div class="ag-perm-actions">
+          <button class="btn-primary" id="aeroPermEnable">Enable AeroGrab</button>
+          <button class="btn-ghost" id="aeroPermCancel">Not Now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AEROGRAB: Receiver Wake-up Notification ── -->
+    <div class="ag-wake-panel hidden" id="aeroWakePanel">
+      <div class="ag-wake-icon">📡</div>
+      <div class="ag-wake-text">
+        <div class="ag-wake-sender" id="aeroWakeSender"></div>
+        <div class="ag-wake-title">is sending a file</div>
+        <div class="ag-wake-file" id="aeroWakeFileName">a file</div>
+        <div class="ag-wake-hint">Open your palm to catch it</div>
+      </div>
+      <div class="ag-wake-btns">
+        <button class="btn-primary ag-wake-catch" id="aeroWakeCatchBtn">✋ Catch</button>
+        <button class="btn-ghost ag-wake-dismiss" id="aeroWakeDismiss">Dismiss</button>
+      </div>
+    </div>
+
+    <!-- ── AEROGRAB: Live gesture label (shown on camera preview) ── -->
+    <div class="ag-cam-overlay hidden" id="agCamOverlay">
+      <div class="ag-drag-handle" id="agDragHandle" title="Drag to move">⋮⋮ drag</div>
+      <div class="ag-preview-wrap">
+        <video id="aeroVideoEl" class="ag-preview-video" playsinline muted></video>
+        <canvas id="aeroGestureCanvas" class="ag-preview-canvas" width="150" height="112"></canvas>
+        <button class="ag-cam-close" id="agCamClose" type="button" title="Close camera & turn off AeroGrab" aria-label="Close camera preview">×</button>
+      </div>
+      <span class="ag-gesture-lbl" id="aeroGestureLbl">—</span>
+      <button class="ag-manual-grab" id="aeroManualGrab" title="Grab current file manually">✊ Grab</button>
+    </div>
+
+    <!-- ── AEROGRAB: Animation Stage Overlay ── -->
+    <div class="ag-anim-stage hidden" id="aeroAnimStage"></div>
+
+    <!-- ── PWA "How to install" instructions modal ── -->
+    <div class="pwa-help hidden" id="pwaHelpModal" role="dialog" aria-modal="true" aria-labelledby="pwaHelpTitle">
+      <div class="pwa-help-card">
+        <button class="pwa-help-close" id="pwaHelpClose" type="button" aria-label="Close">×</button>
+        <div class="pwa-help-head">
+          <div class="pwa-help-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+          </div>
+          <div>
+            <div class="pwa-help-kicker">PWA · Install Guide</div>
+            <h3 class="pwa-help-title" id="pwaHelpTitle">How to install Hevi as an app</h3>
+            <p class="pwa-help-sub">Pick your device — full step-by-step instructions below.</p>
+          </div>
+        </div>
+
+        <div class="pwa-tabs" role="tablist">
+          <button class="pwa-tab is-active" data-pwatab="android" type="button" role="tab">📱 Android</button>
+          <button class="pwa-tab" data-pwatab="ios" type="button" role="tab">🍎 iPhone / iPad</button>
+          <button class="pwa-tab" data-pwatab="desktop" type="button" role="tab">💻 Windows / Mac / Linux</button>
+        </div>
+
+        <div class="pwa-panes">
+
+          <!-- Android -->
+          <div class="pwa-pane is-active" data-pwapane="android">
+            <div class="pwa-note pwa-note-tip">✅ Best browsers: <b>Chrome, Edge, Brave, Samsung Internet</b>. Firefox works too but uses a slightly different menu.</div>
+            <ol class="pwa-steps">
+              <li><div class="pwa-step-num">1</div><div><b>Open Hevi Explorer in Chrome (or Edge / Brave)</b><span>If you're already in the right browser, you're good. If not, copy the URL and open it there.</span></div></li>
+              <li><div class="pwa-step-num">2</div><div><b>Tap the menu (⋮) at the top-right</b><span>The three vertical dots inside your browser's address bar.</span></div></li>
+              <li><div class="pwa-step-num">3</div><div><b>Tap "Install app" or "Add to Home screen"</b><span>The exact label depends on your browser. Some browsers also show a small ⊕ icon in the address bar — tap that.</span></div></li>
+              <li><div class="pwa-step-num">4</div><div><b>Confirm "Install"</b><span>Hevi installs in seconds, lands on your home screen with the TWH icon, and opens in its own window — just like a normal app.</span></div></li>
+            </ol>
+            <div class="pwa-note">Tip: After installing, open Hevi from the home screen — not the browser — to get the standalone app experience and offline UI.</div>
+          </div>
+
+          <!-- iOS -->
+          <div class="pwa-pane" data-pwapane="ios">
+            <div class="pwa-note pwa-note-warn">⚠️ On iPhone / iPad, installing PWAs <b>only works inside Safari</b>. Chrome on iOS cannot install — Apple blocks it.</div>
+            <ol class="pwa-steps">
+              <li><div class="pwa-step-num">1</div><div><b>Open Hevi Explorer in Safari</b><span>Not Chrome, not Firefox — it must be Safari for the install option to appear.</span></div></li>
+              <li><div class="pwa-step-num">2</div><div><b>Tap the Share button</b><span>The square with an arrow pointing up — bottom of the screen on iPhone, top-right on iPad.</span></div></li>
+              <li><div class="pwa-step-num">3</div><div><b>Scroll down and tap "Add to Home Screen"</b><span>Look for the icon that looks like a square with a + inside.</span></div></li>
+              <li><div class="pwa-step-num">4</div><div><b>Tap "Add" in the top-right</b><span>Hevi appears on your home screen with its own icon and opens fullscreen — no Safari address bar.</span></div></li>
+            </ol>
+          </div>
+
+          <!-- Desktop -->
+          <div class="pwa-pane" data-pwapane="desktop">
+            <div class="pwa-note pwa-note-tip">✅ Works on <b>Chrome, Edge, Brave, Opera, Arc</b> on Windows, macOS, Linux, and ChromeOS.</div>
+            <ol class="pwa-steps">
+              <li><div class="pwa-step-num">1</div><div><b>Look at the right side of the address bar</b><span>You'll see a small install icon — usually a monitor with a downward arrow, or a ⊕ symbol.</span></div></li>
+              <li><div class="pwa-step-num">2</div><div><b>Click that install icon</b><span>If you don't see it, click the menu (⋮ or …) in the top-right and choose <b>"Install Hevi…"</b> or <b>"Apps → Install this site as an app"</b>.</span></div></li>
+              <li><div class="pwa-step-num">3</div><div><b>Click "Install" in the popup</b><span>Hevi installs as a real desktop app — Start Menu / Launchpad / app drawer entry, taskbar pinning, and its own window.</span></div></li>
+              <li><div class="pwa-step-num">4</div><div><b>Done — launch from your apps</b><span>Search "Hevi" in Start / Spotlight / your launcher and open it like any other app.</span></div></li>
+            </ol>
+            <div class="pwa-note">Firefox desktop currently does not support installing PWAs natively. Use Chrome, Edge, Brave, or Arc for the install option.</div>
+          </div>
+
+        </div>
+
+        <div class="pwa-help-foot">
+          <button class="btn-ghost" id="pwaHelpDone" type="button">Got it</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AEROGRAB: First-run Tutorial Overlay ── -->
+    <div class="ag-tut hidden" id="aeroTutorial">
+      <div class="ag-tut-card">
+        <button class="ag-tut-skip" id="aeroTutSkip" type="button">Skip</button>
+
+        <div class="ag-tut-step" data-step="1">
+          <div class="ag-tut-art">
+            <div class="ag-tut-pulse"></div>
+            <div class="ag-tut-pulse" style="animation-delay:1.2s"></div>
+            <div class="ag-tut-emoji">✊</div>
+          </div>
+          <div class="ag-tut-kicker">Step 1 of 3</div>
+          <h3 class="ag-tut-title">Make a Fist to <span>GRAB</span></h3>
+          <p class="ag-tut-body">Pick a file, then close your hand into a fist for ~1 second.<br>The file launches into the air, ready to catch.</p>
+        </div>
+
+        <div class="ag-tut-step hidden" data-step="2">
+          <div class="ag-tut-art">
+            <div class="ag-tut-pulse"></div>
+            <div class="ag-tut-pulse" style="animation-delay:1.2s"></div>
+            <div class="ag-tut-emoji">🖐️</div>
+          </div>
+          <div class="ag-tut-kicker">Step 2 of 3</div>
+          <h3 class="ag-tut-title">Open Palm to <span>CATCH</span></h3>
+          <p class="ag-tut-body">When a friend grabs nearby, show your open palm for ~1 second.<br>The file lands inside Hevi automatically.</p>
+        </div>
+
+        <div class="ag-tut-step ag-tut-step-tips hidden" data-step="3">
+          <div class="ag-tut-kicker">Step 3 of 3</div>
+          <h3 class="ag-tut-title">Quick <span>Tips</span></h3>
+          <p class="ag-tut-body">A few simple habits make AeroGrab feel instant — on phone or PC.</p>
+          <div class="ag-tut-tips">
+            <div class="ag-tut-tip">
+              <div class="ag-tut-tip-icon">📷</div>
+              <div class="ag-tut-tip-text"><b>Stay in frame</b><span>Keep your hand close to the camera, palm or fist fully visible.</span></div>
+            </div>
+            <div class="ag-tut-tip">
+              <div class="ag-tut-tip-icon">⏱️</div>
+              <div class="ag-tut-tip-text"><b>Hold ~1 second</b><span>Don't flash the gesture — hold steady until the bar fills.</span></div>
+            </div>
+            <div class="ag-tut-tip">
+              <div class="ag-tut-tip-icon">✋</div>
+              <div class="ag-tut-tip-text"><b>Relax between</b><span>Lower or relax your hand briefly before the next gesture.</span></div>
+            </div>
+            <div class="ag-tut-tip">
+              <div class="ag-tut-tip-icon">👀</div>
+              <div class="ag-tut-tip-text"><b>Watch the label</b><span>The live status under the camera tells you exactly what AeroGrab sees.</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ag-tut-foot">
+          <div class="ag-tut-dots">
+            <span class="ag-tut-dot is-active" data-dot="1"></span>
+            <span class="ag-tut-dot" data-dot="2"></span>
+            <span class="ag-tut-dot" data-dot="3"></span>
+          </div>
+          <button class="ag-tut-next" id="aeroTutNext" type="button">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CDN Scripts ── -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
+    <!-- AeroGrab v5 uses MediaPipe Tasks Vision (real ML), loaded lazily as
+         an ESM bundle from inside aerograb.js. No CDN script tags needed. -->
+
+    <script src="/iv.js?v=11"></script>
+    <script src="/app.js?v=14"></script>
+    <script src="/aerograb-animation.js?v=8"></script>
+    <script src="/aerograb.js?v=14"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js?v=16').then(reg => reg.update()).catch(() => {});
+      }
+
+      // Lock orientation to portrait when running as PWA (manifest sets it,
+      // but Screen Orientation API enforces it when supported).
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('portrait').catch(() => {});
+        }
+      } catch (_) {}
+
+      // ── PWA "Install as App" support ──────────────────────────────────────
+      (function() {
+        let _deferredPrompt = null;
+        const btn   = document.getElementById('installAppBtn');
+        const sub   = document.getElementById('installAppSub');
+        const row   = document.getElementById('installAppRow');
+        if (!btn) return;
+
+        const isStandalone = () =>
+          window.matchMedia('(display-mode: standalone)').matches ||
+          window.navigator.standalone === true;
+
+        function setInstalled() {
+          btn.textContent = 'Installed';
+          btn.disabled = true;
+          btn.style.opacity = '0.55';
+          btn.style.cursor = 'default';
+          if (sub) sub.textContent = 'Hevi Explorer is installed on this device. Open it from your home screen or app drawer.';
+        }
+
+        function detectPlatform() {
+          const ua = navigator.userAgent;
+          if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+          if (/Android/i.test(ua))          return 'android';
+          return 'desktop';
+        }
+
+        function openHowToInstall() {
+          const modal = document.getElementById('pwaHelpModal');
+          if (!modal) return;
+          const plat = detectPlatform();
+          modal.querySelectorAll('.pwa-tab').forEach(t => {
+            t.classList.toggle('is-active', t.dataset.pwatab === plat);
+          });
+          modal.querySelectorAll('.pwa-pane').forEach(p => {
+            p.classList.toggle('is-active', p.dataset.pwapane === plat);
+          });
+          modal.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+        }
+
+        function closeHowToInstall() {
+          const modal = document.getElementById('pwaHelpModal');
+          if (!modal) return;
+          modal.classList.add('hidden');
+          document.body.style.overflow = '';
+        }
+
+        function setNotSupported() {
+          btn.textContent = 'How to install';
+          if (sub) sub.textContent = 'Tap "How to install" for step-by-step instructions for your device — Android, iPhone/iPad, or Desktop.';
+          btn.addEventListener('click', openHowToInstall);
+        }
+
+        // Wire modal once at boot
+        const modal = document.getElementById('pwaHelpModal');
+        if (modal) {
+          modal.querySelectorAll('.pwa-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+              const k = tab.dataset.pwatab;
+              modal.querySelectorAll('.pwa-tab').forEach(t => t.classList.toggle('is-active', t === tab));
+              modal.querySelectorAll('.pwa-pane').forEach(p => p.classList.toggle('is-active', p.dataset.pwapane === k));
+            });
+          });
+          const closeBtn = document.getElementById('pwaHelpClose');
+          const doneBtn  = document.getElementById('pwaHelpDone');
+          if (closeBtn) closeBtn.addEventListener('click', closeHowToInstall);
+          if (doneBtn)  doneBtn.addEventListener('click', closeHowToInstall);
+          modal.addEventListener('click', (e) => { if (e.target === modal) closeHowToInstall(); });
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeHowToInstall();
+          });
+        }
+
+        if (isStandalone()) { setInstalled(); return; }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          _deferredPrompt = e;
+          btn.textContent = 'Install';
+          btn.disabled = false;
+          btn.style.opacity = '';
+          btn.style.cursor = '';
+        });
+
+        btn.addEventListener('click', async () => {
+          if (!_deferredPrompt) return;
+          btn.disabled = true;
+          try {
+            _deferredPrompt.prompt();
+            const choice = await _deferredPrompt.userChoice;
+            if (choice && choice.outcome === 'accepted') {
+              setInstalled();
+              if (typeof toast === 'function') toast('Installing Hevi Explorer…', 'success');
+            } else {
+              btn.disabled = false;
+            }
+          } catch (_) { btn.disabled = false; }
+          _deferredPrompt = null;
+        });
+
+        window.addEventListener('appinstalled', () => { _deferredPrompt = null; setInstalled(); });
+
+        // Fallback: if no beforeinstallprompt arrives within 2s, show platform tips.
+        setTimeout(() => { if (!_deferredPrompt && !isStandalone()) setNotSupported(); }, 2000);
+      })();
+
+      // ── Hevi Network: peer list rendering ─────────────────────────────────
+      (function() {
+        const _peerMap = new Map(); // socketId → deviceName
+        let _prevOtherCount = 0;
+
+        window._heviPeerName = function(socketId) {
+          return _peerMap.get(socketId) || null;
+        };
+
+        function _heviNetSetOpen(open) {
+          const list    = document.getElementById('heviNetList');
+          const header  = document.getElementById('heviNetHeader');
+          const chevron = document.getElementById('heviNetChevron');
+          if (!list) return;
+          list.classList.toggle('hidden', !open);
+          if (header)  header.setAttribute('aria-expanded', String(open));
+          if (chevron) chevron.style.transform = open ? 'rotate(90deg)' : 'rotate(0deg)';
+        }
+
+        window.onHeviPeersUpdate = function(devices, total, mySocketId) {
+          _peerMap.clear();
+          devices.forEach(d => _peerMap.set(d.socketId, d.deviceName));
+
+          const countEl  = document.getElementById('heviNetCount');
+          const listEl   = document.getElementById('heviNetList');
+          const emptyEl  = document.getElementById('heviNetEmpty');
+          const sectionEl = document.getElementById('heviNetSection');
+          if (!countEl || !listEl) return;
+
+          const others = devices.filter(d => d.socketId !== mySocketId);
+          const n = others.length;
+
+          // Count label: show connected status
+          if (total === 0) {
+            countEl.textContent = 'Connecting...';
+          } else if (n === 0) {
+            countEl.textContent = 'Connected — waiting for other devices';
+            countEl.style.color = 'rgba(255,255,255,0.4)';
+          } else {
+            countEl.textContent = `${n} device${n > 1 ? 's' : ''} nearby`;
+            countEl.style.color = 'var(--accent)';
+          }
+
+          // Pulse the section border when a new peer appears
+          if (n > _prevOtherCount && sectionEl) {
+            sectionEl.classList.add('hevi-net-pulse');
+            setTimeout(() => sectionEl.classList.remove('hevi-net-pulse'), 1200);
+            // Auto-expand list when first peer joins
+            _heviNetSetOpen(true);
+          }
+          _prevOtherCount = n;
+
+          // Clear old peer cards
+          Array.from(listEl.querySelectorAll('.hevi-peer-card')).forEach(c => c.remove());
+
+          if (n === 0) {
+            if (emptyEl) emptyEl.style.display = 'block';
+          } else {
+            if (emptyEl) emptyEl.style.display = 'none';
+            others.forEach(d => {
+              const safeId   = d.socketId.replace(/'/g, '');
+              const safeName = d.deviceName.replace(/'/g, '').replace(/</g, '');
+              const card = document.createElement('div');
+              card.className = 'hevi-peer-card';
+              card.dataset.socketId = d.socketId;
+              const sourceLabel = d.source === 'lan' ? 'Auto LAN' : 'This server';
+              card.innerHTML =
+                `<span class="hevi-peer-avatar">${d.avatar || '📱'}</span>` +
+                `<div class="hevi-peer-info">` +
+                  `<div class="hevi-peer-name">${safeName}</div>` +
+                  `<div class="hevi-peer-status"><span class="hevi-peer-dot"></span>Online · ${sourceLabel}</div>` +
+                `</div>` +
+                `<button class="hevi-peer-send" onclick="heviSendTo('${safeId}','${safeName}')">Send →</button>`;
+              listEl.appendChild(card);
+            });
+          }
+        };
+
+        window.heviSendTo = function(socketId, deviceName) {
+          if (!window.aeroGrab) {
+            if (typeof toast === 'function') toast('AeroGrab is not loaded yet.', 'warn');
+            return;
+          }
+          window.aeroGrab.setTarget(socketId);
+          // Close sidebar
+          const overlay = document.getElementById('sidebarOverlay');
+          const drawer  = document.getElementById('sidebarDrawer');
+          if (overlay) overlay.classList.remove('open');
+          if (drawer)  drawer.classList.remove('open');
+          if (typeof toast === 'function') {
+            toast(`Targeted: ${deviceName} — now open a file and make a fist ✊`, 'info');
+          }
+        };
+
+        // Hevi Network header click — collapse/expand
+        document.addEventListener('DOMContentLoaded', function() {
+          const header = document.getElementById('heviNetHeader');
+          if (!header) return;
+          header.addEventListener('click', function() {
+            const list = document.getElementById('heviNetList');
+            if (!list) return;
+            const isOpen = !list.classList.contains('hidden');
+            _heviNetSetOpen(!isOpen);
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

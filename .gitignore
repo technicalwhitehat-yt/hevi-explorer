@@ -1,0 +1,30 @@
+node_modules/
+attached_assets/
+.cache/
+.local/
+*.log
+
+# ── AeroGrab / Hevi Explorer — Personal Data (NEVER push to Git) ─────────────
+# User's personal files stored in Hevi Explorer
+files/
+uploads/
+thumbnails/
+thumbs/
+
+# Local database / index files (contain file paths & metadata)
+*.db
+*.sqlite
+*.sqlite3
+file-index.json
+index-*.json
+
+# Environment & secrets
+.env
+.env.*
+secrets.json
+
+# OS / editor clutter
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
